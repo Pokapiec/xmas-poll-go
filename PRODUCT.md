@@ -33,7 +33,7 @@ A private, link-based tool for one family's Christmas. No accounts, no emails, n
 - Go server-rendered HTML (`html/template`), htmx `hx-boost` for smooth form posts, Tailwind v4 + daisyUI 5 built with the standalone CLI. No Node.js, no client framework.
 - Works without JavaScript (plain forms with redirects).
 - Bilingual: Polish (default) and English on every page, with a language switch. Polish copy uses proper diacritics.
-- No authentication; secrecy relies on unguessable UUID links.
+- Access relies on unguessable private links.
 
 ## Brand Commitments
 

@@ -5,7 +5,7 @@ shuffles who buys a present for whom. Each person gets their own link where they
 write down at least three gifts they would like; after that they see who they
 are buying for and that person's wishlist.
 
-Go rewrite of the Phoenix LiveView app: standard library `net/http` and
+Built with Go's standard-library `net/http` and
 `html/template`, SQLite through the pure-Go `modernc.org/sqlite` driver,
 Tailwind + daisyUI for styling and htmx (`hx-boost`) for page-reload-free forms.
 
@@ -49,8 +49,7 @@ This downloads the Tailwind standalone CLI and daisyUI into `bin/` and
 | `PORT`          | `4000`                   | HTTP port            |
 | `DATABASE_PATH` | `db/xmas_gift_poll.db`   | SQLite database file |
 
-The schema is created on startup (`internal/store/schema.sql`). Table and column
-names match the Elixir version, so an existing database from it can be reused as-is.
+The schema is created on startup (`internal/store/schema.sql`).
 
 ## Deploying to Fly.io
 
@@ -61,10 +60,8 @@ fly deploy
 ```
 
 The image runs from `/app` and the `db` volume is mounted at `/app/db`, so the
-database is `/app/db/xmas_gift_poll.db`. It is a static binary on distroless
-(~27 MB) running as uid 65534 (`nobody`), same as the Elixir release, so a
-database file that release left on a volume stays writable. To reuse the old
-Elixir volume, mount it at `/app/db` and set `DATABASE_PATH=/app/db/name.db`.
+database is `/app/db/xmas_gift_poll.db`. The app runs as uid 65534 (`nobody`)
+in a distroless container.
 
 ## Pages
 
@@ -74,7 +71,4 @@ Elixir volume, mount it at `/app/db` and set `DATABASE_PATH=/app/db/name.db`.
 | `/p/{party}`   | organizer: add people, draw pairs, copy/share links, rename |
 | `/g/{person}`  | person: wishlist, then who they buy for (PL by default, EN switch) |
 
-IDs are 16 random alphanumeric characters. Parties and people created before
-short links keep their UUIDs, and the old long URLs
-(`/parties/{party}/people/new`, `/parties/{party}/people/{person}/gifts`)
-redirect to the short ones.
+The app generates 16-character random alphanumeric IDs for its private links.

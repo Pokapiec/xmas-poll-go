@@ -1,8 +1,8 @@
 package server
 
 import (
+	"bytes"
 	"context"
-	"database/sql"
 	"io"
 	"log/slog"
 	"net/http"
@@ -19,7 +19,7 @@ import (
 
 type testApp struct {
 	t      *testing.T
-	dbPath string
+	logs   *bytes.Buffer // everything the app logged
 	store  *store.Store
 	srv    *httptest.Server
 	client *http.Client
@@ -27,14 +27,14 @@ type testApp struct {
 
 func newTestApp(t *testing.T) *testApp {
 	t.Helper()
-	dbPath := filepath.Join(t.TempDir(), "test.db")
-	st, err := store.Open(dbPath)
+	st, err := store.Open(filepath.Join(t.TempDir(), "test.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { st.Close() })
 
-	handler, err := New(st, slog.New(slog.DiscardHandler))
+	logs := new(bytes.Buffer)
+	handler, err := New(st, slog.New(slog.NewTextHandler(logs, nil)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func newTestApp(t *testing.T) *testApp {
 	t.Cleanup(srv.Close)
 
 	jar, _ := cookiejar.New(nil)
-	return &testApp{t: t, dbPath: dbPath, store: st, srv: srv, client: &http.Client{Jar: jar}}
+	return &testApp{t: t, logs: logs, store: st, srv: srv, client: &http.Client{Jar: jar}}
 }
 
 // do sends a request, follows redirects and returns the final response's status, path and body.
@@ -208,29 +208,7 @@ func TestLinks(t *testing.T) {
 		t.Fatalf("person page: status %d, path %s", status, path)
 	}
 
-	// Long links from earlier versions, with the UUIDs they used, still lead to the right page.
-	const legacyParty, legacyPerson = "461e316d-b1bc-4db2-a878-44e59493a12a", "b8d457ac-6a0f-421c-8280-b7f0b0c6d82b"
-	db, err := sql.Open("sqlite", app.dbPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer db.Close()
-	if _, err := db.Exec(`UPDATE parties SET public_id = ? WHERE id = ?`, legacyParty, party.ID); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := db.Exec(`UPDATE people SET public_id = ? WHERE id = ?`, legacyPerson, person.ID); err != nil {
-		t.Fatal(err)
-	}
-	if status, path, _ := app.get("/parties/" + legacyParty + "/people/new"); status != http.StatusOK || path != "/p/"+legacyParty {
-		t.Errorf("legacy organizer link: status %d, path %s", status, path)
-	}
-	if status, path, body := app.get("/parties/" + legacyParty + "/people/" + legacyPerson + "/gifts"); status != http.StatusOK || path != "/g/"+legacyPerson {
-		t.Errorf("legacy person link: status %d, path %s", status, path)
-	} else {
-		mustContain(t, body, "Ania")
-	}
-
-	for _, path := range []string{"/p/nope", "/g/nope", "/parties/nope/people/new"} {
+	for _, path := range []string{"/p/nope", "/g/nope", "/unknown"} {
 		if status, _, _ := app.get(path); status != http.StatusNotFound {
 			t.Errorf("%s: status %d, want 404", path, status)
 		}
@@ -276,6 +254,64 @@ func TestCrossOriginPostRejected(t *testing.T) {
 	if resp.StatusCode != http.StatusForbidden {
 		t.Fatalf("status %d, want 403", resp.StatusCode)
 	}
+}
+
+// Links are the keys to organizer and person pages, so their IDs must never reach the logs.
+func TestLogsHideLinkIDs(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+	party, _ := app.store.CreateParty(ctx, "Party")
+	person, _ := app.store.CreatePerson(ctx, party.ID, "Ania")
+
+	app.get(partyPath(party))
+	app.get(giftsPath(person))
+	app.post(giftsPath(person), url.Values{"name": {"Socks"}})
+	app.get("/p/" + party.PublicID + "/unknown")
+
+	logs := app.logs.String()
+	for _, id := range []string{party.PublicID, person.PublicID} {
+		if strings.Contains(logs, id) {
+			t.Errorf("logs contain the ID %s:\n%s", id, logs)
+		}
+	}
+	mustContain(t, logs, `route="GET /p/{party}"`, `route="POST /g/{person}"`)
+}
+
+func TestPrivatePagesAreNotCached(t *testing.T) {
+	app := newTestApp(t)
+	party, _ := app.store.CreateParty(context.Background(), "Party")
+	resp, err := app.client.Get(app.srv.URL + partyPath(party))
+	if err != nil {
+		t.Fatal(err)
+	}
+	resp.Body.Close()
+	if got := resp.Header.Get("Cache-Control"); got != "private, no-store" {
+		t.Errorf("Cache-Control = %q, want private, no-store", got)
+	}
+
+	_, _, body := app.get(partyPath(party))
+	mustContain(t, body, `hx-history="false"`, `"historyCacheSize":0`,
+		`hreflang="pl" hx-boost="false"`, `hreflang="en" hx-boost="false"`) // language links reload the page
+}
+
+func TestFormSizeLimits(t *testing.T) {
+	app := newTestApp(t)
+
+	// A body over the limit is refused before it is parsed.
+	status, _, _ := app.post("/p", url.Values{"name": {strings.Repeat("x", 2*maxFormBytes)}})
+	if status != http.StatusRequestEntityTooLarge {
+		t.Errorf("huge form: status %d, want 413", status)
+	}
+
+	// A value over the field limit is reported, and only maxNameLen characters are echoed back.
+	status, _, body := app.post("/p", url.Values{"name": {strings.Repeat("y", 5000)}})
+	if status != http.StatusUnprocessableEntity {
+		t.Errorf("long name: status %d, want 422", status)
+	}
+	if strings.Contains(body, strings.Repeat("y", maxNameLen+1)) {
+		t.Error("the form echoed back more than maxNameLen characters")
+	}
+	mustContain(t, body, `value="`+strings.Repeat("y", maxNameLen)+`"`)
 }
 
 func TestPlural(t *testing.T) {

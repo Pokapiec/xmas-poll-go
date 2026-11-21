@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#1e4d3a">
-    {{/* Swap every response, including 404 and 422 pages that show form errors. */}}
-    <meta name="htmx-config" content='{"responseHandling":[{"code":".*","swap":true}]}'>
+    {{/* Swap every response, including 404 and 422 pages that show form errors.
+         Keep no page snapshots in browser storage: pages hold private links, wishlists and draws. */}}
+    <meta name="htmx-config" content='{"responseHandling":[{"code":".*","swap":true}],"historyCacheSize":0,"refreshOnHistoryMiss":true}'>
     <title>{{with .Title}}{{.}} · {{end}}Xmas Gift Poll</title>
     <link rel="preload" href="/static/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
@@ -42,7 +43,7 @@
       document.addEventListener("htmx:afterSettle", revealShare);
     </script>
   </head>
-  <body hx-boost="true" class="min-h-dvh pb-[max(2rem,env(safe-area-inset-bottom))]">
+  <body hx-boost="true" hx-history="false" class="min-h-dvh pb-[max(2rem,env(safe-area-inset-bottom))]">
     {{with .Flash}}
     <div class="toast toast-top toast-center z-50 w-full max-w-md px-4{{if eq .Kind "info"}} toast-auto{{end}}" role="status">
       <div class="alert {{if eq .Kind "error"}}alert-error{{else}}alert-success{{end}} shadow-lg flex py-2 pr-2">
@@ -61,8 +62,8 @@
             Xmas Gift Poll
           </a>
           <nav aria-label="{{t .Lang "Language"}}" class="flex rounded-full bg-white/10 p-0.5 text-xs font-semibold">
-            <a href="{{.Path}}?locale=pl" hreflang="pl" class="rounded-full px-3 py-1.5 {{if eq .Lang "pl"}}bg-white text-pine{{else}}text-white/80 hover:text-white{{end}}"{{if eq .Lang "pl"}} aria-current="true"{{end}}>PL</a>
-            <a href="{{.Path}}?locale=en" hreflang="en" class="rounded-full px-3 py-1.5 {{if eq .Lang "en"}}bg-white text-pine{{else}}text-white/80 hover:text-white{{end}}"{{if eq .Lang "en"}} aria-current="true"{{end}}>EN</a>
+            <a href="{{.Path}}?locale=pl" hreflang="pl" hx-boost="false" class="rounded-full px-3 py-1.5 {{if eq .Lang "pl"}}bg-white text-pine{{else}}text-white/80 hover:text-white{{end}}"{{if eq .Lang "pl"}} aria-current="true"{{end}}>PL</a>
+            <a href="{{.Path}}?locale=en" hreflang="en" hx-boost="false" class="rounded-full px-3 py-1.5 {{if eq .Lang "en"}}bg-white text-pine{{else}}text-white/80 hover:text-white{{end}}"{{if eq .Lang "en"}} aria-current="true"{{end}}>EN</a>
           </nav>
         </div>
         {{block "hero" .}}{{end}}

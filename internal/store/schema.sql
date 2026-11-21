@@ -1,5 +1,3 @@
--- Table and column names match the original Ecto schema, so a database
--- created by the Elixir version of the app can be opened as-is.
 -- Every statement is idempotent; it runs on each startup.
 
 CREATE TABLE IF NOT EXISTS parties (
@@ -27,7 +25,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS people_public_id_index ON people (public_id);
 CREATE TABLE IF NOT EXISTS gifts (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
     person_id   INTEGER NOT NULL REFERENCES people (id),
     inserted_at TEXT NOT NULL,
     updated_at  TEXT NOT NULL

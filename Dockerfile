@@ -21,8 +21,6 @@ COPY --from=build /out/xmas-poll /app/xmas-poll
 # On Fly the volume is mounted here; without a volume this empty directory is used.
 COPY --from=build --chown=65534:65534 /out/db /app/db
 
-# Same user as the Elixir release ("nobody"), so a database file that release
-# created on the volume stays writable.
 USER 65534:65534
 
 ENV PORT=8080

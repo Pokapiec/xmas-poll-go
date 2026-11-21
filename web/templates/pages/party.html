@@ -109,7 +109,7 @@
     <div class="flex-1">
       {{if eq .Draw "partial"}}
       <h2 id="draw" class="text-xl font-bold">{{t .Lang "New people need a pair"}}</h2>
-      <p class="mt-1 text-sm text-white/85">{{t .Lang "Drawing again gives everyone a new person, so let anyone who already looked know."}}</p>
+      <p class="mt-1 text-sm text-white/85">{{t .Lang "Drawing again redoes every pair, so people may get someone different. Let anyone who already looked know."}}</p>
       {{else if eq .Draw "ready"}}
       <h2 id="draw" class="text-xl font-bold">{{t .Lang "Ready to draw?"}}</h2>
       <p class="mt-1 text-sm text-white/85">{{t .Lang "Everyone gets one person to buy for. Nobody draws themselves."}}</p>
@@ -120,7 +120,7 @@
     </div>
   </div>
   <form method="post" action="/p/{{.Party.PublicID}}/shuffle" hx-swap="innerHTML show:none" class="relative mt-5"
-        {{if eq .Draw "partial"}}hx-confirm="{{t .Lang "Draw again? Everyone will get a new person."}}"{{end}}>
+        {{if eq .Draw "partial"}}hx-confirm="{{t .Lang "Draw again? Pairs may change, including for people who already looked."}}"{{end}}>
     <button type="submit" class="btn btn-accent btn-lg w-full disabled:bg-white/15 disabled:text-white/60"{{if eq .Draw "too-few"}} disabled{{end}}>
       {{icon "shuffle"}}{{if eq .Draw "partial"}}{{t .Lang "Draw again"}}{{else}}{{t .Lang "Draw now"}}{{end}}
     </button>

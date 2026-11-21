@@ -21,6 +21,7 @@ var schema string
 var (
 	ErrNotFound        = errors.New("not found")
 	ErrNotEnoughPeople = errors.New("at least two people are needed to shuffle")
+	ErrAlreadyDrawn    = errors.New("everyone already has someone to buy for")
 )
 
 type Party struct {
@@ -69,7 +70,6 @@ func Open(path string) (*Store, error) {
 
 func (s *Store) Close() error { return s.db.Close() }
 
-// timestamp matches the format Ecto used for :utc_datetime columns.
 func timestamp() string { return time.Now().UTC().Format(time.RFC3339) }
 
 const (
@@ -77,8 +77,7 @@ const (
 	publicIDLen      = 16 // about 95 random bits: short enough to paste, impossible to guess
 )
 
-// newPublicID returns a random ID for use in links. Parties and people created
-// by earlier versions of the app keep their UUIDs, which still work.
+// newPublicID returns a random ID for use in links.
 func newPublicID() string {
 	b := make([]byte, 0, publicIDLen)
 	buf := make([]byte, 32)
@@ -197,6 +196,11 @@ func (s *Store) PersonByID(ctx context.Context, id int64) (Person, error) {
 
 // ShufflePeople assigns everyone in the party a random person to buy a gift for,
 // making sure nobody gets themselves. Earlier assignments are replaced.
+//
+// It refuses with ErrAlreadyDrawn when everyone already has someone. That check
+// runs inside the write transaction (opened with BEGIN IMMEDIATE, see the DSN in
+// Open), so two overlapping requests can't both draw: the second waits for the
+// first to commit and then sees its result.
 func (s *Store) ShufflePeople(ctx context.Context, partyID int64) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -204,18 +208,24 @@ func (s *Store) ShufflePeople(ctx context.Context, partyID int64) error {
 	}
 	defer tx.Rollback()
 
-	rows, err := tx.QueryContext(ctx, `SELECT id FROM people WHERE party_id = ? ORDER BY id`, partyID)
+	rows, err := tx.QueryContext(ctx,
+		`SELECT id, receiver_id IS NOT NULL FROM people WHERE party_id = ? ORDER BY id`, partyID)
 	if err != nil {
 		return err
 	}
 	var ids []int64
+	paired := 0
 	for rows.Next() {
 		var id int64
-		if err := rows.Scan(&id); err != nil {
+		var hasReceiver bool
+		if err := rows.Scan(&id, &hasReceiver); err != nil {
 			rows.Close()
 			return err
 		}
 		ids = append(ids, id)
+		if hasReceiver {
+			paired++
+		}
 	}
 	rows.Close()
 	if err := rows.Err(); err != nil {
@@ -223,6 +233,9 @@ func (s *Store) ShufflePeople(ctx context.Context, partyID int64) error {
 	}
 	if len(ids) < 2 {
 		return ErrNotEnoughPeople
+	}
+	if paired == len(ids) {
+		return ErrAlreadyDrawn
 	}
 
 	receivers := derange(ids)

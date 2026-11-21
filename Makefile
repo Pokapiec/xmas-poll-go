@@ -15,8 +15,9 @@ run:
 build: css
 	CGO_ENABLED=0 go build -trimpath -o bin/xmas-poll ./cmd/xmas-poll
 
+test: SHELL := bash
 test:
-	go test ./...
+	@set -o pipefail; go test -v ./... | awk '/^--- (PASS|FAIL|SKIP): / { count++ } { print } END { printf "\nTests: %d\n", count }'
 
 # Rebuild web/static/app.css from web/assets/app.css and the classes used in web/templates/.
 css: tools

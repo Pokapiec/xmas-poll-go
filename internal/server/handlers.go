@@ -60,20 +60,9 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("POST /g/{person}", s.addGift)
 	mux.HandleFunc("POST /g/{person}/{gift}/delete", s.deleteGift)
 
-	// Long links handed out by earlier versions of the app.
-	mux.HandleFunc("GET /parties/new", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/", http.StatusMovedPermanently)
-	})
-	mux.HandleFunc("GET /parties/{party}/people/new", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/p/"+url.PathEscape(r.PathValue("party")), http.StatusMovedPermanently)
-	})
-	mux.HandleFunc("GET /parties/{party}/people/{person}/gifts", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/g/"+url.PathEscape(r.PathValue("person")), http.StatusMovedPermanently)
-	})
-
 	mux.HandleFunc("/", s.notFound)
 
-	return s.logRequests(http.NewCrossOriginProtection().Handler(mux))
+	return s.logRequests(http.NewCrossOriginProtection().Handler(limitBody(mux)))
 }
 
 // Page data
@@ -146,7 +135,11 @@ func (s *server) home(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) createParty(w http.ResponseWriter, r *http.Request) {
 	lang := locale(w, r)
-	name, problem := validateText(r.PostFormValue("name"), maxNameLen)
+	value, ok := formValue(w, r, "name")
+	if !ok {
+		return
+	}
+	name, problem := validateText(value, maxNameLen)
 	if problem != "" {
 		s.render(w, http.StatusUnprocessableEntity, "home", homePage{
 			page: s.page(w, r, lang, translate(lang, "New gift draw"), "/"),
@@ -181,7 +174,11 @@ func (s *server) renameParty(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, problem := validateText(r.PostFormValue("name"), maxNameLen)
+	value, ok := formValue(w, r, "name")
+	if !ok {
+		return
+	}
+	name, problem := validateText(value, maxNameLen)
 	if problem != "" {
 		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, partyNameField(lang, name, problem), personNameField(lang, "", ""))
 		return
@@ -200,7 +197,11 @@ func (s *server) addPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, problem := validateText(r.PostFormValue("name"), maxNameLen)
+	value, ok := formValue(w, r, "name")
+	if !ok {
+		return
+	}
+	name, problem := validateText(value, maxNameLen)
 	if problem != "" {
 		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, partyNameField(lang, party.Name, ""), personNameField(lang, name, problem))
 		return
@@ -219,17 +220,11 @@ func (s *server) shuffle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	people, err := s.store.People(r.Context(), party.ID)
-	if err != nil {
-		s.serverError(w, r, err)
-		return
-	}
-	if drawState(people) == drawDone {
+	err := s.store.ShufflePeople(r.Context(), party.ID)
+	if errors.Is(err, store.ErrAlreadyDrawn) {
 		s.redirectWithFlash(w, r, partyPath(party), "error", translate(lang, "Everyone already has someone to buy for."))
 		return
 	}
-
-	err = s.store.ShufflePeople(r.Context(), party.ID)
 	if errors.Is(err, store.ErrNotEnoughPeople) {
 		s.redirectWithFlash(w, r, partyPath(party), "error", translate(lang, "Add at least two people before drawing."))
 		return
@@ -296,7 +291,11 @@ func (s *server) addGift(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name, problem := validateText(r.PostFormValue("name"), maxGiftLen)
+	value, ok := formValue(w, r, "name")
+	if !ok {
+		return
+	}
+	name, problem := validateText(value, maxGiftLen)
 	if problem != "" {
 		s.renderGifts(w, r, http.StatusUnprocessableEntity, lang, party, person, giftField(lang, name, problem))
 		return
@@ -422,15 +421,41 @@ func (s *server) partyAndPerson(w http.ResponseWriter, r *http.Request, lang str
 
 // Forms
 
+// maxFormBytes caps request bodies. The longest field, a 1000-character gift,
+// is at most about 12 KB even with every byte percent-encoded.
+const maxFormBytes = 32 << 10
+
+func limitBody(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, maxFormBytes)
+		next.ServeHTTP(w, r)
+	})
+}
+
+// formValue returns a field of the posted form. When the form can't be read,
+// it answers 413 (too large) or 400 itself and returns false.
+func formValue(w http.ResponseWriter, r *http.Request, key string) (string, bool) {
+	if err := r.ParseForm(); err != nil {
+		if _, tooLarge := errors.AsType[*http.MaxBytesError](err); tooLarge {
+			http.Error(w, http.StatusText(http.StatusRequestEntityTooLarge), http.StatusRequestEntityTooLarge)
+		} else {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+		}
+		return "", false
+	}
+	return r.PostForm.Get(key), true
+}
+
 // validateText trims a form value and returns it along with a problem
-// description, which is empty when the value is valid.
+// description, which is empty when the value is valid. A value that is too
+// long comes back cut to maxLen, so the form never echoes more than that.
 func validateText(value string, maxLen int) (string, string) {
 	value = strings.TrimSpace(value)
 	switch {
 	case value == "":
 		return value, "Please fill this in."
 	case utf8.RuneCountInString(value) > maxLen:
-		return value, "This is too long."
+		return string([]rune(value)[:maxLen]), "This is too long."
 	}
 	return value, ""
 }
@@ -550,6 +575,8 @@ func (s *server) render(w http.ResponseWriter, status int, name string, data any
 		return
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// Pages show private links, wishlists and draws: keep them out of every cache.
+	w.Header().Set("Cache-Control", "private, no-store")
 	if status == http.StatusUnprocessableEntity {
 		// A form re-rendered with errors: keep the form page's URL in the address bar
 		// instead of the URL the form posted to.
@@ -568,7 +595,7 @@ func (s *server) renderNotFound(w http.ResponseWriter, r *http.Request, lang str
 }
 
 func (s *server) serverError(w http.ResponseWriter, r *http.Request, err error) {
-	s.log.Error("request failed", "method", r.Method, "path", r.URL.Path, "err", err)
+	s.log.Error("request failed", "route", route(r), "err", err)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
@@ -588,14 +615,22 @@ func (r *statusRecorder) WriteHeader(status int) {
 	r.ResponseWriter.WriteHeader(status)
 }
 
+// route names the matched route for logs, such as "GET /p/{party}". Real paths
+// are never logged: the IDs in them are the keys to organizer and person pages.
+func route(r *http.Request) string {
+	if r.Pattern == "" {
+		return r.Method + " (unmatched)"
+	}
+	return r.Pattern
+}
+
 func (s *server) logRequests(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rec, r)
 		s.log.Info("request",
-			"method", r.Method,
-			"path", r.URL.Path,
+			"route", route(r), // set by the ServeMux on this same request
 			"status", rec.status,
 			"duration", time.Since(start).Round(time.Microsecond),
 		)
