@@ -1,14 +1,15 @@
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+# fly.toml app configuration file generated for xmas-poll-go on 2026-11-21T09:20:01Z
+#
+# See https://docs.fly.io/reference/configuration for information about how to use this file.
+#
 
-app = 'xmas-gift-poll-go'
-primary_region = 'ams'
+app = 'xmas-poll-go'
+primary_region = 'fra'
 kill_signal = 'SIGTERM'
 
 [build]
-
 [env]
   PORT = '8080'
-  # The database goes to /app/db/xmas_gift_poll.db on the volume mounted below.
 
 [[mounts]]
   source = 'db'
