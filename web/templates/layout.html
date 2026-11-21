@@ -1,0 +1,79 @@
+{{define "layout"}}<!DOCTYPE html>
+<html lang="{{.Lang}}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1e4d3a">
+    {{/* Swap every response, including 404 and 422 pages that show form errors. */}}
+    <meta name="htmx-config" content='{"responseHandling":[{"code":".*","swap":true}]}'>
+    <title>{{with .Title}}{{.}} · {{end}}Xmas Gift Poll</title>
+    <link rel="preload" href="/static/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/static/app.css">
+    <script src="/static/htmx.min.js" defer></script>
+    <script>
+      // Copy and share buttons for personal links. Registered once on the document,
+      // so they keep working after htmx swaps the body.
+      document.addEventListener("click", async (event) => {
+        const button = event.target.closest("[data-copy], [data-share]");
+        if (!button) return;
+        event.preventDefault();
+        const url = new URL(button.dataset.copy || button.dataset.share, location.origin).href;
+        if (button.dataset.share) {
+          navigator.share({ title: button.dataset.title, url }).catch(() => {});
+          return;
+        }
+        const label = button.querySelector("[data-label]");
+        const original = label.textContent;
+        try {
+          await navigator.clipboard.writeText(url);
+          label.textContent = button.dataset.done;
+          button.classList.add("btn-success");
+        } catch {
+          label.textContent = button.dataset.failed;
+        }
+        setTimeout(() => { label.textContent = original; button.classList.remove("btn-success"); }, 2000);
+      });
+      // Share buttons only appear where the browser can share (mostly phones).
+      const revealShare = () => {
+        if (navigator.share) document.querySelectorAll("[data-share]").forEach((b) => b.hidden = false);
+      };
+      document.addEventListener("DOMContentLoaded", revealShare);
+      document.addEventListener("htmx:afterSettle", revealShare);
+    </script>
+  </head>
+  <body hx-boost="true" class="min-h-dvh pb-[max(2rem,env(safe-area-inset-bottom))]">
+    {{with .Flash}}
+    <div class="toast toast-top toast-center z-50 w-full max-w-md px-4{{if eq .Kind "info"}} toast-auto{{end}}" role="status">
+      <div class="alert {{if eq .Kind "error"}}alert-error{{else}}alert-success{{end}} shadow-lg flex py-2 pr-2">
+        {{if eq .Kind "error"}}{{icon "circle-alert"}}{{else}}{{icon "check"}}{{end}}
+        <span class="flex-1 text-left">{{.Message}}</span>
+        <button type="button" class="btn btn-ghost btn-sm btn-square" onclick="this.closest('.toast').remove()" aria-label="{{t $.Lang "Close"}}">{{icon "x"}}</button>
+      </div>
+    </div>
+    {{end}}
+
+    <header class="band">
+      <div class="mx-auto max-w-xl px-4 pb-12">
+        <div class="flex h-14 items-center justify-between">
+          <a href="/" class="flex items-center gap-2 font-display text-base font-bold">
+            <span class="door-num size-7 text-sm">{{icon "gift"}}</span>
+            Xmas Gift Poll
+          </a>
+          <nav aria-label="{{t .Lang "Language"}}" class="flex rounded-full bg-white/10 p-0.5 text-xs font-semibold">
+            <a href="{{.Path}}?locale=pl" hreflang="pl" class="rounded-full px-3 py-1.5 {{if eq .Lang "pl"}}bg-white text-pine{{else}}text-white/80 hover:text-white{{end}}"{{if eq .Lang "pl"}} aria-current="true"{{end}}>PL</a>
+            <a href="{{.Path}}?locale=en" hreflang="en" class="rounded-full px-3 py-1.5 {{if eq .Lang "en"}}bg-white text-pine{{else}}text-white/80 hover:text-white{{end}}"{{if eq .Lang "en"}} aria-current="true"{{end}}>EN</a>
+          </nav>
+        </div>
+        {{block "hero" .}}{{end}}
+      </div>
+    </header>
+
+    <main class="relative mx-auto -mt-8 grid max-w-xl gap-5 px-4">
+      {{template "content" .}}
+    </main>
+  </body>
+</html>
+{{end}}
+
+{{define "field-error"}}{{with .Error}}<p class="mt-1.5 flex items-center gap-1.5 text-sm text-error">{{icon "circle-alert"}}{{.}}</p>{{end}}{{end}}

@@ -1,0 +1,533 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T08:53:19+00:00",
+  "title": "Design System: Xmas Gift Poll",
+  "extensions": {
+    "colorMeta": {
+      "calendar-red": {
+        "role": "primary",
+        "displayName": "Calendar Red",
+        "canonical": "#9e1b32",
+        "tonalRamp": [
+          "oklch(15% 0.045 18.1)",
+          "oklch(26% 0.079 18.1)",
+          "oklch(38% 0.113 18.1)",
+          "oklch(49% 0.147 18.1)",
+          "oklch(61% 0.147 18.1)",
+          "oklch(72% 0.113 18.1)",
+          "oklch(84% 0.079 18.1)",
+          "oklch(95% 0.045 18.1)"
+        ]
+      },
+      "door-ink": {
+        "role": "primary",
+        "displayName": "Door Ink",
+        "canonical": "#7a1426",
+        "tonalRamp": [
+          "oklch(15% 0.037 17.7)",
+          "oklch(26% 0.065 17.7)",
+          "oklch(38% 0.093 17.7)",
+          "oklch(49% 0.121 17.7)",
+          "oklch(61% 0.121 17.7)",
+          "oklch(72% 0.093 17.7)",
+          "oklch(84% 0.065 17.7)",
+          "oklch(95% 0.037 17.7)"
+        ]
+      },
+      "pine": {
+        "role": "secondary",
+        "displayName": "Pine",
+        "canonical": "#1e4d3a",
+        "tonalRamp": [
+          "oklch(15% 0.017 164.2)",
+          "oklch(26% 0.029 164.2)",
+          "oklch(38% 0.042 164.2)",
+          "oklch(49% 0.055 164.2)",
+          "oklch(61% 0.055 164.2)",
+          "oklch(72% 0.042 164.2)",
+          "oklch(84% 0.029 164.2)",
+          "oklch(95% 0.017 164.2)"
+        ]
+      },
+      "gold-foil": {
+        "role": "tertiary",
+        "displayName": "Gold Foil",
+        "canonical": "#d9a441",
+        "tonalRamp": [
+          "oklch(15% 0.035 79.8)",
+          "oklch(26% 0.062 79.8)",
+          "oklch(38% 0.089 79.8)",
+          "oklch(49% 0.116 79.8)",
+          "oklch(61% 0.116 79.8)",
+          "oklch(72% 0.089 79.8)",
+          "oklch(84% 0.062 79.8)",
+          "oklch(95% 0.035 79.8)"
+        ]
+      },
+      "gold-foil-ink": {
+        "role": "tertiary",
+        "displayName": "Gold Foil Ink",
+        "canonical": "#3a2606",
+        "tonalRamp": [
+          "oklch(15% 0.015 74.8)",
+          "oklch(26% 0.026 74.8)",
+          "oklch(38% 0.037 74.8)",
+          "oklch(49% 0.048 74.8)",
+          "oklch(61% 0.048 74.8)",
+          "oklch(72% 0.037 74.8)",
+          "oklch(84% 0.026 74.8)",
+          "oklch(95% 0.015 74.8)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(26% 0.000 89.9)",
+          "oklch(38% 0.000 89.9)",
+          "oklch(49% 0.000 89.9)",
+          "oklch(61% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(84% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "snow": {
+        "role": "neutral",
+        "displayName": "Snow",
+        "canonical": "#f7f6f2",
+        "tonalRamp": [
+          "oklch(15% 0.005 95.1)",
+          "oklch(26% 0.005 95.1)",
+          "oklch(38% 0.005 95.1)",
+          "oklch(49% 0.005 95.1)",
+          "oklch(61% 0.005 95.1)",
+          "oklch(72% 0.005 95.1)",
+          "oklch(84% 0.005 95.1)",
+          "oklch(95% 0.005 95.1)"
+        ]
+      },
+      "frost-line": {
+        "role": "neutral",
+        "displayName": "Frost Line",
+        "canonical": "#e6e3da",
+        "tonalRamp": [
+          "oklch(15% 0.003 91.5)",
+          "oklch(26% 0.006 91.5)",
+          "oklch(38% 0.009 91.5)",
+          "oklch(49% 0.011 91.5)",
+          "oklch(61% 0.011 91.5)",
+          "oklch(72% 0.009 91.5)",
+          "oklch(84% 0.006 91.5)",
+          "oklch(95% 0.003 91.5)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1c1c1c",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(26% 0.000 89.9)",
+          "oklch(38% 0.000 89.9)",
+          "oklch(49% 0.000 89.9)",
+          "oklch(61% 0.000 89.9)",
+          "oklch(72% 0.000 89.9)",
+          "oklch(84% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "holly-green": {
+        "role": "status",
+        "displayName": "Holly Green",
+        "canonical": "#1e6b45",
+        "tonalRamp": [
+          "oklch(15% 0.026 157.4)",
+          "oklch(26% 0.046 157.4)",
+          "oklch(38% 0.067 157.4)",
+          "oklch(49% 0.087 157.4)",
+          "oklch(61% 0.087 157.4)",
+          "oklch(72% 0.067 157.4)",
+          "oklch(84% 0.046 157.4)",
+          "oklch(95% 0.026 157.4)"
+        ]
+      },
+      "amber": {
+        "role": "status",
+        "displayName": "Amber",
+        "canonical": "#b7791f",
+        "tonalRamp": [
+          "oklch(15% 0.034 70.4)",
+          "oklch(26% 0.060 70.4)",
+          "oklch(38% 0.086 70.4)",
+          "oklch(49% 0.112 70.4)",
+          "oklch(61% 0.112 70.4)",
+          "oklch(72% 0.086 70.4)",
+          "oklch(84% 0.060 70.4)",
+          "oklch(95% 0.034 70.4)"
+        ]
+      },
+      "error-red": {
+        "role": "status",
+        "displayName": "Error Red",
+        "canonical": "#b3261e",
+        "tonalRamp": [
+          "oklch(15% 0.049 28.7)",
+          "oklch(26% 0.086 28.7)",
+          "oklch(38% 0.123 28.7)",
+          "oklch(49% 0.160 28.7)",
+          "oklch(61% 0.160 28.7)",
+          "oklch(72% 0.123 28.7)",
+          "oklch(84% 0.086 28.7)",
+          "oklch(95% 0.049 28.7)"
+        ]
+      },
+      "night-ground": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "canonical": "#101914",
+        "tonalRamp": [
+          "oklch(15% 0.005 160.1)",
+          "oklch(26% 0.008 160.1)",
+          "oklch(38% 0.011 160.1)",
+          "oklch(49% 0.015 160.1)",
+          "oklch(61% 0.015 160.1)",
+          "oklch(72% 0.011 160.1)",
+          "oklch(84% 0.008 160.1)",
+          "oklch(95% 0.005 160.1)"
+        ]
+      },
+      "night-paper": {
+        "role": "neutral",
+        "displayName": "Night Paper",
+        "canonical": "#18241e",
+        "tonalRamp": [
+          "oklch(15% 0.006 162.8)",
+          "oklch(26% 0.010 162.8)",
+          "oklch(38% 0.014 162.8)",
+          "oklch(49% 0.018 162.8)",
+          "oklch(61% 0.018 162.8)",
+          "oklch(72% 0.014 162.8)",
+          "oklch(84% 0.010 162.8)",
+          "oklch(95% 0.006 162.8)"
+        ]
+      },
+      "night-line": {
+        "role": "neutral",
+        "displayName": "Night Line",
+        "canonical": "#2a3a31",
+        "tonalRamp": [
+          "oklch(15% 0.007 159.9)",
+          "oklch(26% 0.013 159.9)",
+          "oklch(38% 0.018 159.9)",
+          "oklch(49% 0.024 159.9)",
+          "oklch(61% 0.024 159.9)",
+          "oklch(72% 0.018 159.9)",
+          "oklch(84% 0.013 159.9)",
+          "oklch(95% 0.007 159.9)"
+        ]
+      },
+      "night-ink": {
+        "role": "neutral",
+        "displayName": "Night Ink",
+        "canonical": "#f1efe8",
+        "tonalRamp": [
+          "oklch(15% 0.010 93.6)",
+          "oklch(26% 0.010 93.6)",
+          "oklch(38% 0.010 93.6)",
+          "oklch(49% 0.010 93.6)",
+          "oklch(61% 0.010 93.6)",
+          "oklch(72% 0.010 93.6)",
+          "oklch(84% 0.010 93.6)",
+          "oklch(95% 0.010 93.6)"
+        ]
+      },
+      "night-pine": {
+        "role": "secondary",
+        "displayName": "Night Pine",
+        "canonical": "#173d2e",
+        "tonalRamp": [
+          "oklch(15% 0.014 164.9)",
+          "oklch(26% 0.025 164.9)",
+          "oklch(38% 0.035 164.9)",
+          "oklch(49% 0.046 164.9)",
+          "oklch(61% 0.046 164.9)",
+          "oklch(72% 0.035 164.9)",
+          "oklch(84% 0.025 164.9)",
+          "oklch(95% 0.014 164.9)"
+        ]
+      },
+      "night-gold": {
+        "role": "tertiary",
+        "displayName": "Night Gold",
+        "canonical": "#e2b259",
+        "tonalRamp": [
+          "oklch(15% 0.033 80.9)",
+          "oklch(26% 0.058 80.9)",
+          "oklch(38% 0.083 80.9)",
+          "oklch(49% 0.108 80.9)",
+          "oklch(61% 0.108 80.9)",
+          "oklch(72% 0.083 80.9)",
+          "oklch(84% 0.058 80.9)",
+          "oklch(95% 0.033 80.9)"
+        ]
+      },
+      "night-mint": {
+        "role": "status",
+        "displayName": "Night Mint",
+        "canonical": "#6fb894",
+        "tonalRamp": [
+          "oklch(15% 0.025 161.5)",
+          "oklch(26% 0.044 161.5)",
+          "oklch(38% 0.063 161.5)",
+          "oklch(49% 0.082 161.5)",
+          "oklch(61% 0.082 161.5)",
+          "oklch(72% 0.063 161.5)",
+          "oklch(84% 0.044 161.5)",
+          "oklch(95% 0.025 161.5)"
+        ]
+      },
+      "night-error": {
+        "role": "status",
+        "displayName": "Night Error",
+        "canonical": "#f2726b",
+        "tonalRamp": [
+          "oklch(15% 0.043 25.1)",
+          "oklch(26% 0.076 25.1)",
+          "oklch(38% 0.109 25.1)",
+          "oklch(49% 0.143 25.1)",
+          "oklch(61% 0.143 25.1)",
+          "oklch(72% 0.109 25.1)",
+          "oklch(84% 0.076 25.1)",
+          "oklch(95% 0.043 25.1)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "h1 greeting or party name in the pine band; 2.25rem on the home page from 640px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The receiver's name inside the opened door."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and door headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Wishes, explanations, inputs (system sans)."
+      },
+      "body-sm": {
+        "displayName": "Body Small",
+        "purpose": "Supporting lines under titles and inside doors."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Form labels; help text drops to 0.75rem."
+      },
+      "numeral": {
+        "displayName": "Door Numeral",
+        "purpose": "Numerals on gold tiles, sized to the tile (shown at the 72px door size)."
+      }
+    },
+    "shadows": [
+      {
+        "name": "paper-rest",
+        "value": "0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px -8px rgb(0 0 0 / 0.12)",
+        "purpose": "Panels."
+      },
+      {
+        "name": "door-lift",
+        "value": "0 2px 4px rgb(0 0 0 / 0.08), 0 12px 24px -12px color-mix(in oklab, var(--color-primary) 70%, black)",
+        "purpose": "The closed red door; the only tinted shadow."
+      },
+      {
+        "name": "door-open",
+        "value": "0 2px 4px rgb(0 0 0 / 0.06), 0 12px 24px -14px rgb(0 0 0 / 0.25)",
+        "purpose": "The opened door."
+      }
+    ],
+    "motion": [
+      {
+        "name": "door-swing",
+        "value": "rotateY(-112deg) 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards; transform-origin: left center; perspective: 1200px",
+        "purpose": "The one authored motion: the closed door leaf swings away once when the third wish unlocks the draw. Leaf not rendered under prefers-reduced-motion."
+      },
+      {
+        "name": "toast-away",
+        "value": "opacity 0 + translateY(-8px), 0.3s ease-in, 4s delay",
+        "purpose": "Info toasts leave on their own; instant hide under reduced motion."
+      },
+      {
+        "name": "control-transition",
+        "value": "0.2s cubic-bezier(0, 0, 0.2, 1)",
+        "purpose": "daisyUI default colour transition on buttons."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      }
+    ],
+    "focusRing": {
+      "value": "2px solid var(--color-accent); outline-offset: 2px",
+      "purpose": "Global :focus-visible ring in gold foil."
+    },
+    "perforation": {
+      "value": "::after inset 6px; 2px dashed rgb(255 255 255 / 0.3); border-radius calc(var(--radius-box) - 4px)",
+      "purpose": "Closed doors only."
+    },
+    "themes": {
+      "light": "advent",
+      "dark": "advent-night (prefersdark)"
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Calendar-red, full-width 48px action; one per card.",
+      "html": "<button class=\"ds-btn-primary\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg>Add gift</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: .375rem; height: 48px; padding: 0 20px; border: 0; border-radius: 12px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 1.125rem; font-weight: 600; cursor: pointer; transition: color .2s, background-color .2s; width: 100%; background: var(--color-primary, #9e1b32); color: #fff; } .ds-btn-primary:hover { background: color-mix(in oklab, var(--color-primary, #9e1b32), #000 7%); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-accent, #d9a441); outline-offset: 2px; } .ds-icon { width: 1.25em; height: 1.25em; flex: none; }"
+    },
+    {
+      "name": "Accent Button (inside a door)",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "Gold-foil button that only lives inside a red door.",
+      "html": "<div class=\"ds-acc-wrap\"><button class=\"ds-btn-accent\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22\"/><path d=\"m18 2 4 4-4 4\"/><path d=\"M2 6h1.9c1.5 0 2.9.9 3.6 2.2\"/><path d=\"M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8\"/><path d=\"m18 14 4 4-4 4\"/></svg>Draw now</button></div>",
+      "css": ".ds-acc-wrap { background: var(--color-primary, #9e1b32); padding: 20px; border-radius: 16px; } .ds-btn-accent { display: inline-flex; align-items: center; justify-content: center; gap: .375rem; height: 48px; padding: 0 20px; border: 0; border-radius: 12px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 1.125rem; font-weight: 600; cursor: pointer; transition: color .2s, background-color .2s; width: 100%; background: var(--color-accent, #d9a441); color: var(--color-accent-content, #3a2606); } .ds-btn-accent:hover { background: color-mix(in oklab, var(--color-accent, #d9a441), #000 7%); } .ds-btn-accent:focus-visible { outline: 2px solid var(--color-accent, #d9a441); outline-offset: 2px; } .ds-icon { width: 1.25em; height: 1.25em; flex: none; }"
+    },
+    {
+      "name": "Soft Pine Button",
+      "kind": "button",
+      "refersTo": "button-soft-pine",
+      "description": "Per-person Copy link / Share action on the organizer page.",
+      "html": "<button class=\"ds-btn-soft\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 17H7A5 5 0 0 1 7 7h2\"/><path d=\"M15 7h2a5 5 0 1 1 0 10h-2\"/><line x1=\"8\" x2=\"16\" y1=\"12\" y2=\"12\"/></svg>Copy link</button>",
+      "css": ".ds-btn-soft { display: inline-flex; align-items: center; justify-content: center; gap: .375rem; height: 48px; padding: 0 20px; border: 0; border-radius: 12px; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 1.125rem; font-weight: 600; cursor: pointer; transition: color .2s, background-color .2s; height: 40px; padding: 0 16px; font-size: .875rem; background: color-mix(in oklab, var(--color-secondary, #1e4d3a) 8%, var(--color-base-100, #ffffff)); color: var(--color-secondary, #1e4d3a); border: 1px solid color-mix(in oklab, var(--color-secondary, #1e4d3a) 8%, var(--color-base-100, #ffffff)); } .ds-btn-soft:hover { background: var(--color-secondary, #1e4d3a); color: #fff; } .ds-btn-soft:focus-visible { outline: 2px solid var(--color-accent, #d9a441); outline-offset: 2px; } .ds-icon { width: 1.25em; height: 1.25em; flex: none; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Large paper input with ink-tinted border; red caret, gold keyboard focus.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-label\">Party name</span><input class=\"ds-input\" type=\"text\" placeholder=\"e.g. Christmas Eve at the Smiths\"></label>",
+      "css": ".ds-field { display: grid; gap: 6px; font-family: ui-sans-serif, system-ui, sans-serif; color: var(--color-base-content, #1c1c1c); } .ds-label { font-size: .875rem; font-weight: 600; } .ds-input { height: 48px; padding: 0 12px; font-size: 1.125rem; background: var(--color-base-100, #ffffff); color: var(--color-base-content, #1c1c1c); border: 1px solid color-mix(in oklab, var(--color-base-content, #1c1c1c) 20%, transparent); border-radius: 12px; caret-color: var(--color-primary, #9e1b32); } .ds-input:focus { border-color: var(--color-base-content, #1c1c1c); outline: none; } .ds-input:focus-visible { outline: 2px solid var(--color-accent, #d9a441); outline-offset: 2px; }"
+    },
+    {
+      "name": "Header Band",
+      "kind": "nav",
+      "refersTo": "header-band",
+      "description": "Pine band with gold gift tile wordmark and PL/EN pill switch.",
+      "html": "<header class=\"ds-band\"><a class=\"ds-brand\" href=\"#\"><span class=\"ds-tile\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"8\" width=\"18\" height=\"4\" rx=\"1\"/><path d=\"M12 8v13\"/><path d=\"M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7\"/><path d=\"M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5\"/></svg></span>Xmas Gift Poll</a><nav class=\"ds-lang\"><a class=\"ds-on\" href=\"#\">PL</a><a href=\"#\">EN</a></nav></header>",
+      "css": ".ds-band { display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 16px; background: var(--color-secondary, #1e4d3a); color: #fff; } .ds-brand { display: flex; align-items: center; gap: 8px; font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif; font-weight: 700; color: inherit; text-decoration: none; } .ds-tile { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: #d9a441; color: #7a1426; font-size: .875rem; } .ds-lang { display: flex; padding: 2px; border-radius: 9999px; background: rgb(255 255 255 / .1); font-family: ui-sans-serif, system-ui, sans-serif; font-size: .75rem; font-weight: 600; } .ds-lang a { padding: 6px 12px; border-radius: 9999px; color: rgb(255 255 255 / .8); text-decoration: none; } .ds-lang a:hover { color: #fff; } .ds-lang a.ds-on { background: #fff; color: #1e4d3a; } .ds-lang a:focus-visible, .ds-brand:focus-visible { outline: 2px solid var(--color-accent, #d9a441); outline-offset: 2px; } .ds-icon { width: 1.25em; height: 1.25em; flex: none; }"
+    },
+    {
+      "name": "Closed Door",
+      "kind": "card",
+      "refersTo": "door",
+      "description": "The participant's locked draw: red card, perforated edge, 72px gold numeral, wish pips.",
+      "html": "<section class=\"ds-door\"><div class=\"ds-door-row\"><span class=\"ds-num\">7</span><div><h2 class=\"ds-door-h\">Your door is still closed</h2><p class=\"ds-door-p\">Add 2 more gifts and it opens to show who you're buying for.</p></div></div><div class=\"ds-pips\"><span class=\"ds-pip ds-pip-on\"></span><span class=\"ds-pip\"></span><span class=\"ds-pip\"></span><span class=\"ds-count\">1 of 3 gifts</span></div></section>",
+      "css": ".ds-door { position: relative; padding: 20px; border-radius: 16px; background: var(--color-primary, #9e1b32); color: #fff; font-family: ui-sans-serif, system-ui, sans-serif; box-shadow: 0 2px 4px rgb(0 0 0 / .08), 0 12px 24px -12px color-mix(in oklab, var(--color-primary, #9e1b32) 70%, black); } .ds-door::after { content: ''; position: absolute; inset: 6px; border: 2px dashed rgb(255 255 255 / .3); border-radius: 12px; pointer-events: none; } .ds-door-row { position: relative; display: flex; align-items: center; gap: 16px; } .ds-num { display: grid; place-items: center; flex: none; width: 72px; height: 72px; border-radius: 8px; background: #d9a441; color: #7a1426; font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif; font-weight: 800; font-size: 2.25rem; font-variant-numeric: tabular-nums; } .ds-door-h { margin: 0; font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1.375; } .ds-door-p { margin: 4px 0 0; font-size: .875rem; color: rgb(255 255 255 / .85); } .ds-pips { position: relative; display: flex; align-items: center; gap: 6px; margin-top: 16px; color: var(--color-accent, #d9a441); } .ds-pip { width: 12px; height: 12px; border-radius: 9999px; border: 2px solid currentColor; box-sizing: border-box; } .ds-pip-on { background: currentColor; } .ds-count { margin-left: 4px; font-size: .875rem; color: rgb(255 255 255 / .85); font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Opened Door",
+      "kind": "card",
+      "refersTo": "door-open",
+      "description": "The reveal: paper card in a 3px red frame with the receiver's name and wishes.",
+      "html": "<section class=\"ds-open\"><div class=\"ds-open-row\"><span class=\"ds-otile\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"3\" y=\"8\" width=\"18\" height=\"4\" rx=\"1\"/><path d=\"M12 8v13\"/><path d=\"M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7\"/><path d=\"M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5\"/></svg></span><div><h2 class=\"ds-open-h\">Celina</h2><p class=\"ds-open-p\">You're buying a gift for this person. Here's what they'd like:</p></div></div><ul class=\"ds-wishes\"><li><span class=\"ds-dot\"></span>Warm ski socks, size 43</li><li><span class=\"ds-dot\"></span>Cinema tickets for the holidays</li></ul></section>",
+      "css": ".ds-open { padding: 20px; border-radius: 16px; background: var(--color-base-100, #ffffff); color: var(--color-base-content, #1c1c1c); border: 3px solid var(--color-primary, #9e1b32); font-family: ui-sans-serif, system-ui, sans-serif; box-shadow: 0 2px 4px rgb(0 0 0 / .06), 0 12px 24px -14px rgb(0 0 0 / .25); } .ds-open-row { display: flex; align-items: center; gap: 16px; } .ds-otile { display: grid; place-items: center; flex: none; width: 56px; height: 56px; border-radius: 8px; background: #d9a441; color: #7a1426; font-size: 1.5rem; } .ds-open-h { margin: 0; font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif; font-size: 1.5rem; font-weight: 800; } .ds-open-p { margin: 0; font-size: .875rem; color: color-mix(in oklab, var(--color-base-content, #1c1c1c) 75%, transparent); } .ds-wishes { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; } .ds-wishes li { display: flex; gap: 12px; align-items: baseline; padding: 12px 16px; border-radius: 12px; background: var(--color-base-200, #f7f6f2); } .ds-dot { flex: none; width: 8px; height: 8px; border-radius: 9999px; background: #d9a441; } .ds-icon { width: 1.25em; height: 1.25em; flex: none; }"
+    },
+    {
+      "name": "Person Row",
+      "kind": "custom",
+      "refersTo": "door-number-list",
+      "description": "Organizer's people list: numbered gold tile, name, wish pips with count, copy link.",
+      "html": "<ul class=\"ds-people\"><li><span class=\"ds-ltile\">1</span><div class=\"ds-pmain\"><p class=\"ds-pname\">Ania</p><p class=\"ds-pmeta\"><span class=\"ds-ppips\"><span class=\"ds-pp ds-pp-on\"></span><span class=\"ds-pp ds-pp-on\"></span><span class=\"ds-pp\"></span></span>2 of 3 gifts</p></div><button class=\"ds-plink\"><svg class=\"ds-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 17H7A5 5 0 0 1 7 7h2\"/><path d=\"M15 7h2a5 5 0 1 1 0 10h-2\"/><line x1=\"8\" x2=\"16\" y1=\"12\" y2=\"12\"/></svg>Copy link</button></li></ul>",
+      "css": ".ds-people { margin: 0; padding: 0; list-style: none; background: var(--color-base-100, #ffffff); color: var(--color-base-content, #1c1c1c); border-block: 1px solid var(--color-base-300, #e6e3da); font-family: ui-sans-serif, system-ui, sans-serif; } .ds-people li { display: flex; align-items: center; gap: 12px; padding: 12px 20px; } .ds-ltile { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 8px; background: #d9a441; color: #7a1426; font-family: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif; font-weight: 800; font-size: 1.125rem; } .ds-pmain { flex: 1; min-width: 0; } .ds-pname { margin: 0; font-weight: 600; } .ds-pmeta { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; font-size: .75rem; color: color-mix(in oklab, var(--color-base-content, #1c1c1c) 70%, transparent); } .ds-ppips { display: flex; gap: 4px; color: var(--color-secondary, #1e4d3a); } .ds-pp { width: 10px; height: 10px; border-radius: 9999px; border: 2px solid currentColor; box-sizing: border-box; } .ds-pp-on { background: currentColor; } .ds-plink { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; border: 0; border-radius: 12px; background: color-mix(in oklab, var(--color-secondary, #1e4d3a) 8%, var(--color-base-100, #ffffff)); color: var(--color-secondary, #1e4d3a); font: 600 .875rem ui-sans-serif, system-ui, sans-serif; cursor: pointer; } .ds-plink:hover { background: var(--color-secondary, #1e4d3a); color: #fff; } .ds-plink:focus-visible { outline: 2px solid var(--color-accent, #d9a441); outline-offset: 2px; } .ds-icon { width: 1.25em; height: 1.25em; flex: none; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Printed Advent Calendar",
+    "overview": "Every page is a sheet of a printed advent calendar. A pine-green band runs across the top, white paper cards are tucked into it, and the thing you are waiting for is a calendar-red door with a gold-foil number on it. The participant's draw stays behind a closed door until they have written three wishes; then the door swings open once and the inside is plain paper with the name of the person they buy for. The organizer sees the same vocabulary: each person is a numbered gold tile, and the draw itself is a red door with a gold button inside it.\n\nThe world is warm but tidy. It is a utility for relatives of every age, so density is low, type is large, and there is one obvious action per card. Festivity comes from materials (red, pine, gold foil, perforated door edges, a chunky grotesque numeral), never from decoration. The user's chosen direction explicitly refuses two things: the generic white SaaS card stack, and the snowflake or clip-art Christmas page.\n\nDark mode is the same calendar at night: the ground and paper turn pine-black, while calendar red and gold foil stay put.",
+    "keyCharacteristics": [
+      "Pine header band with the first card tucked 32px up into it.",
+      "Calendar red is reserved for doors and the primary action.",
+      "Gold-foil tiles with Bricolage Grotesque numerals mark every numbered or iconic item.",
+      "Single phone-width column (max 576px) on every screen size.",
+      "Exactly one authored motion: the door swing.",
+      "Lucide line icons inlined as SVG, sized to the text."
+    ],
+    "rules": [
+      {
+        "name": "The Red Means Door Rule",
+        "body": "Calendar red covers a large surface only when it is a door (closed card or open frame). Elsewhere it appears as one primary button per form, links and the caret. No red section backgrounds, red headers or red decorative fills.",
+        "section": "colors"
+      },
+      {
+        "name": "The Foil Sits on Red or Pine Rule",
+        "body": "Gold is foil: it appears as tiles, pips, dots, buttons inside a red door, and status text on the pine band. It is never body text on paper or snow.",
+        "section": "colors"
+      },
+      {
+        "name": "The Same Calendar at Night Rule",
+        "body": "Dark mode swaps the ground, paper, lines and ink to pine-black values and keeps calendar red and gold foil. It is a lighting change, not a second palette.",
+        "section": "colors"
+      },
+      {
+        "name": "The Printed Numeral Rule",
+        "body": "Anything numbered or emblematic sits in a gold tile with a Bricolage 800 numeral or a Lucide icon in door ink. Counts in running text use tabular figures.",
+        "section": "typography"
+      },
+      {
+        "name": "The Grotesque Is for Print Rule",
+        "body": "Bricolage Grotesque is used only for h1 to h3, the brand wordmark and door numerals. Body copy, labels, buttons and inputs stay in the system sans.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tucked Card Rule",
+        "body": "The first card on every page overlaps the pine band by 32px. The band is never a standalone header with content floating below it.",
+        "section": "layout"
+      },
+      {
+        "name": "The Doors Cast, Paper Rests Rule",
+        "body": "Only the closed door casts a coloured shadow. Every other surface is flat or sits on the paper-rest shadow; no new elevation levels.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Perforation Rule",
+        "body": "Dashed inner edges belong only to closed doors. Opened doors use the solid red frame. No other surface gets a dashed or double border.",
+        "section": "shapes"
+      },
+      {
+        "name": "The One Swing Rule",
+        "body": "The door swing is the only authored animation, and it plays once per unlock. New screens do not add entrance animations, looping effects or decorative motion.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do tuck the first card 32px into the pine band on every page.",
+      "Do mark numbered or emblematic items with a gold-foil door-number tile in door ink.",
+      "Do keep one full-width 48px primary button per card, and use the gold accent button only inside a red door.",
+      "Do inline Lucide icons through the `icon` template function at 1.25em, stroked in `currentColor`.",
+      "Do pair every visual progress mark (pips) with its written count.",
+      "Do design every surface for both `advent` and `advent-night`; check that pine-coloured marks switch to night mint in dark mode."
+    ],
+    "donts": [
+      "Don't add snowflakes, clip-art, ornaments or other Christmas decoration; the festive feel comes from red, pine, gold and the door.",
+      "Don't fall back to a plain stack of white cards on a white page without the pine band and the door.",
+      "Don't use calendar red for anything larger than a button unless it is a door.",
+      "Don't set gold foil as text on paper or snow.",
+      "Don't set body copy, labels or buttons in Bricolage Grotesque.",
+      "Don't add a second animation or replay the door swing.",
+      "Don't use emoji or text glyphs as icons."
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{{define "hero"}}
+<div class="pt-4">
+  <h1 class="text-3xl leading-tight font-extrabold sm:text-4xl">{{t .Lang "Family gift draw, without the paper slips"}}</h1>
+  <p class="mt-3 max-w-prose text-white/80">{{t .Lang "Add your people, draw who buys for whom and send everyone their own link. No accounts needed."}}</p>
+</div>
+{{end}}
+
+{{define "content"}}
+<section class="panel p-5" aria-labelledby="start">
+  <h2 id="start" class="text-xl font-bold">{{t .Lang "Start a new draw"}}</h2>
+  <form method="post" action="/p" class="mt-4 grid gap-3">
+    <label class="grid gap-1.5">
+      <span class="text-sm font-semibold">{{.Name.Label}}</span>
+      <input type="text" name="{{.Name.Name}}" value="{{.Name.Value}}" placeholder="{{.Name.Placeholder}}"
+             maxlength="{{.Name.MaxLen}}" required autocomplete="off"
+             class="input input-lg w-full{{if .Name.Error}} input-error{{end}}"{{if .Name.Error}} aria-invalid="true" autofocus{{end}}>
+    </label>
+    {{template "field-error" .Name}}
+    <button type="submit" class="btn btn-primary btn-lg w-full">
+      {{t .Lang "Create the draw"}} {{icon "arrow-right"}}
+    </button>
+  </form>
+</section>
+
+<section class="px-1 pt-2" aria-labelledby="how">
+  <h2 id="how" class="text-lg font-bold">{{t .Lang "How it works"}}</h2>
+  <ol class="mt-4 grid gap-4">
+    <li class="flex gap-3">
+      <span class="door-num size-10 text-lg">1</span>
+      <div><p class="font-semibold">{{t .Lang "Add people"}}</p><p class="text-sm text-base-content/70">{{t .Lang "Everyone taking part, yourself included."}}</p></div>
+    </li>
+    <li class="flex gap-3">
+      <span class="door-num size-10 text-lg">2</span>
+      <div><p class="font-semibold">{{t .Lang "Draw pairs"}}</p><p class="text-sm text-base-content/70">{{t .Lang "Everyone gets one person to buy for. Nobody draws themselves."}}</p></div>
+    </li>
+    <li class="flex gap-3">
+      <span class="door-num size-10 text-lg">3</span>
+      <div><p class="font-semibold">{{t .Lang "Send the links"}}</p><p class="text-sm text-base-content/70">{{t .Lang "Everyone writes a wishlist and sees what their person wants."}}</p></div>
+    </li>
+  </ol>
+</section>
+{{end}}

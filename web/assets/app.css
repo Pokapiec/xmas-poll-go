@@ -1,0 +1,178 @@
+/* Source for web/static/app.css. Rebuild with `make css` (or `make css-watch`). */
+
+@import "tailwindcss" source(none);
+@source "../templates";
+@source "../../internal/server";
+
+@plugin "./vendor/daisyui.mjs" {
+  themes: false;
+}
+
+/* The world is a printed advent calendar: snow-white card, pine band,
+   calendar red for doors and primary actions, gold-foil numerals. */
+@plugin "./vendor/daisyui-theme.mjs" {
+  name: "advent";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: #ffffff;
+  --color-base-200: #f7f6f2;
+  --color-base-300: #e6e3da;
+  --color-base-content: #1c1c1c;
+  --color-primary: #9e1b32;
+  --color-primary-content: #ffffff;
+  --color-secondary: #1e4d3a;
+  --color-secondary-content: #ffffff;
+  --color-accent: #d9a441;
+  --color-accent-content: #3a2606;
+  --color-neutral: #1c1c1c;
+  --color-neutral-content: #f7f6f2;
+  --color-info: #1e4d3a;
+  --color-info-content: #ffffff;
+  --color-success: #1e6b45;
+  --color-success-content: #ffffff;
+  --color-warning: #b7791f;
+  --color-warning-content: #ffffff;
+  --color-error: #b3261e;
+  --color-error-content: #ffffff;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* The same calendar at night. */
+@plugin "./vendor/daisyui-theme.mjs" {
+  name: "advent-night";
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: #18241e;
+  --color-base-200: #101914;
+  --color-base-300: #2a3a31;
+  --color-base-content: #f1efe8;
+  --color-primary: #9e1b32;
+  --color-primary-content: #ffffff;
+  --color-secondary: #173d2e;
+  --color-secondary-content: #f1efe8;
+  --color-accent: #e2b259;
+  --color-accent-content: #3a2606;
+  --color-neutral: #f1efe8;
+  --color-neutral-content: #101914;
+  --color-info: #6fb894;
+  --color-info-content: #0b2219;
+  --color-success: #6fb894;
+  --color-success-content: #0b2219;
+  --color-warning: #e2b259;
+  --color-warning-content: #3a2606;
+  --color-error: #f2726b;
+  --color-error-content: #2a0b09;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url("/static/fonts/bricolage-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url("/static/fonts/bricolage-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@theme {
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --color-pine: #1e4d3a;
+  --color-gold: #d9a441;
+}
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-base-200 text-base-content antialiased; }
+  h1, h2, h3 { @apply font-display text-balance; }
+  ::selection { background: color-mix(in oklab, var(--color-accent) 45%, transparent); }
+  input, textarea { caret-color: var(--color-primary); }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  a { text-underline-offset: 3px; }
+}
+
+@layer components {
+  .icon { width: 1.25em; height: 1.25em; flex: none; }
+
+  /* Header band: the pine strip at the top of every page. */
+  .band { @apply bg-secondary text-secondary-content; }
+
+  .panel {
+    @apply bg-base-100 rounded-box border border-base-300;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px -8px rgb(0 0 0 / 0.12);
+  }
+
+  /* A gold-foil numeral printed on a calendar door. */
+  .door-num {
+    @apply font-display font-extrabold grid flex-none place-items-center rounded-lg bg-gold tabular-nums;
+    color: #7a1426;
+  }
+
+  /* The closed door: red card with a perforated inner edge. */
+  .door {
+    @apply bg-primary text-primary-content rounded-box relative;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.08), 0 12px 24px -12px color-mix(in oklab, var(--color-primary) 70%, black);
+  }
+  .door::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 2px dashed rgb(255 255 255 / 0.3);
+    border-radius: calc(var(--radius-box) - 4px);
+    pointer-events: none;
+  }
+
+  /* The opened door: the card frame stays red, the inside is paper. */
+  .door-open {
+    @apply bg-base-100 rounded-box relative border-[3px] border-primary;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.06), 0 12px 24px -14px rgb(0 0 0 / 0.25);
+  }
+
+  /* Wishlist progress marks: filled = written, hollow = still to write. */
+  .pip { @apply inline-block size-2.5 rounded-full border-2 border-current; }
+  .pip-on { @apply bg-current; }
+
+  .wish { white-space: pre-line; overflow-wrap: anywhere; }
+}
+
+/* The one authored motion: the door swings open the moment the third wish unlocks it. */
+@media (prefers-reduced-motion: no-preference) {
+  .door-swing { perspective: 1200px; }
+  .door-swing .door-leaf {
+    transform-origin: left center;
+    animation: door-open 1.1s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+  }
+  @keyframes door-open {
+    to { transform: rotateY(-112deg); opacity: 0; visibility: hidden; }
+  }
+  .toast-auto { animation: toast-away 0.3s ease-in 4s forwards; }
+  @keyframes toast-away { to { opacity: 0; transform: translateY(-8px); visibility: hidden; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .door-leaf { display: none; }
+  .toast-auto { animation: toast-hide 0s 4s forwards; }
+  @keyframes toast-hide { to { visibility: hidden; } }
+}

@@ -1,0 +1,130 @@
+{{define "hero"}}
+<div class="pt-4">
+  <details class="group"{{if .PartyName.Error}} open{{end}}>
+    <summary class="flex cursor-pointer list-none items-start gap-2 [&::-webkit-details-marker]:hidden">
+      <h1 class="min-w-0 text-3xl leading-tight font-extrabold break-words">{{.Party.Name}}</h1>
+      <span class="btn btn-ghost btn-square -mr-2 text-white/80 hover:bg-white/10 hover:text-white" role="img" aria-label="{{t .Lang "Rename the party"}}">{{icon "pencil"}}</span>
+    </summary>
+    <form method="post" action="/p/{{.Party.PublicID}}/name" hx-swap="innerHTML show:none" class="mt-3 grid gap-2">
+      <label class="sr-only" for="party-name">{{.PartyName.Label}}</label>
+      <div class="flex gap-2">
+        <input id="party-name" type="text" name="name" value="{{.PartyName.Value}}" maxlength="{{.PartyName.MaxLen}}" required autocomplete="off"
+               class="input w-full flex-1 text-base-content{{if .PartyName.Error}} input-error{{end}}"{{if .PartyName.Error}} aria-invalid="true" autofocus{{end}}>
+        <button type="submit" class="btn btn-accent">{{t .Lang "Save name"}}</button>
+      </div>
+      {{with .PartyName.Error}}<p class="flex items-center gap-1.5 text-sm font-semibold text-white"><span class="text-gold">{{icon "circle-alert"}}</span>{{.}}</p>{{end}}
+    </form>
+  </details>
+  <p class="mt-2 flex flex-wrap items-center gap-x-2 text-white/80">
+    <span>{{len .People}} {{plural .Lang (len .People) "person"}}</span>
+    <span aria-hidden="true">·</span>
+    {{if eq .Draw "done"}}<span class="inline-flex items-center gap-1 font-semibold text-white"><span class="text-gold">{{icon "check-check"}}</span> {{t .Lang "Pairs drawn"}}</span>
+    {{else if eq .Draw "partial"}}<span>{{t .Lang "Waiting for a new draw"}}</span>
+    {{else}}<span>{{t .Lang "Not drawn yet"}}</span>{{end}}
+  </p>
+  <div class="mt-4 flex items-center gap-3 rounded-field bg-white/10 py-2 pr-2 pl-3 text-sm text-white/90">
+    <span class="text-gold">{{icon "lock"}}</span>
+    <p class="flex-1">{{t .Lang "This is your organizer page. Save its link to come back later."}}</p>
+    <a href="{{.Path}}" hx-boost="false" class="btn shrink-0 border-0 bg-white/15 text-white hover:bg-white/25"
+       data-copy="{{.Path}}" data-done="{{t .Lang "Copied!"}}" data-failed="{{t .Lang "Couldn't copy, long-press the link instead"}}">
+      {{icon "copy"}}<span data-label>{{t .Lang "Copy link"}}</span>
+    </a>
+  </div>
+</div>
+{{end}}
+
+{{define "content"}}
+{{if eq .Draw "ready" "partial"}}{{template "draw" .}}{{end}}
+<section class="panel" aria-labelledby="people">
+  <div class="flex items-baseline justify-between px-5 pt-5">
+    <h2 id="people" class="text-xl font-bold">{{t .Lang "People"}}</h2>
+    {{if .People}}<span class="text-sm text-base-content/70 tabular-nums">{{len .People}}</span>{{end}}
+  </div>
+  {{if and .People (eq .Draw "too-few" "ready")}}
+  <p class="mt-1 px-5 text-sm text-base-content/70">{{t .Lang "Each person's link appears here after the draw."}}</p>
+  {{end}}
+
+  {{if .People}}
+  <ul class="mt-3 divide-y divide-base-300 border-y border-base-300">
+    {{range $i, $p := .People}}
+    <li class="flex items-center gap-3 px-5 py-3">
+      <span class="door-num size-10 text-lg">{{inc $i}}</span>
+      <div class="min-w-0 flex-1">
+        <p class="truncate font-semibold">{{$p.Name}}</p>
+        <p class="mt-0.5 flex items-center gap-2 text-xs text-base-content/70">
+          <span class="flex gap-1 text-secondary dark:text-info" aria-hidden="true">{{range pips $p.GiftCount}}<span class="pip{{if .}} pip-on{{end}}"></span>{{end}}</span>
+          <span class="whitespace-nowrap tabular-nums">{{t $.Lang "%d of %d gifts" $p.GiftCount $.MinGifts}}</span>
+        </p>
+      </div>
+      {{if $p.ReceiverID.Valid}}
+      {{$link := printf "/g/%s" $p.PublicID}}
+      <div class="flex shrink-0 gap-1">
+        <a href="{{$link}}" hx-boost="false" class="btn btn-soft btn-secondary max-sm:btn-square" aria-label="{{t $.Lang "Copy link"}}"
+           data-copy="{{$link}}" data-done="{{t $.Lang "Copied!"}}" data-failed="{{t $.Lang "Couldn't copy, long-press the link instead"}}">
+          {{icon "link-2"}}<span data-label class="max-sm:sr-only">{{t $.Lang "Copy link"}}</span>
+        </a>
+        <button type="button" hidden class="btn btn-square btn-soft btn-secondary"
+                data-share="{{$link}}" data-title="{{$.Party.Name}}: {{$p.Name}}" aria-label="{{t $.Lang "Share"}}">{{icon "share-2"}}</button>
+      </div>
+      {{else if eq $.Draw "partial"}}
+      <span class="badge badge-soft badge-warning shrink-0">{{t $.Lang "Needs a new draw"}}</span>
+      {{end}}
+    </li>
+    {{end}}
+  </ul>
+  {{else}}
+  <p class="mx-5 mt-3 rounded-field bg-base-200 p-4 text-sm text-base-content/70">{{t .Lang "No one here yet. Add the first person below, yourself included."}}</p>
+  {{end}}
+
+  <form method="post" action="/p/{{.Party.PublicID}}/people" hx-swap="innerHTML show:none" class="p-5">
+    <label for="person-name" class="text-sm font-semibold">{{t .Lang "Add a person"}}</label>
+    <div class="mt-1.5 flex gap-2">
+      <input id="person-name" type="text" name="name" value="{{.PersonName.Value}}" placeholder="{{.PersonName.Label}}"
+             maxlength="{{.PersonName.MaxLen}}" required autocomplete="off"
+             class="input w-full flex-1{{if .PersonName.Error}} input-error{{end}}"{{if or .PersonName.Error (not .People)}} autofocus{{end}}{{if .PersonName.Error}} aria-invalid="true"{{end}}>
+      <button type="submit" class="btn btn-primary">{{icon "user-plus"}}{{t .Lang "Add"}}</button>
+    </div>
+    {{template "field-error" .PersonName}}
+  </form>
+</section>
+
+{{if eq .Draw "done" "too-few"}}{{template "draw" .}}{{end}}
+{{end}}
+
+{{define "draw"}}
+{{if eq .Draw "done"}}
+<section class="door-open p-5" aria-labelledby="draw">
+  <div class="flex items-start gap-4">
+    <span class="door-num size-12 text-xl">{{icon "share-2"}}</span>
+    <div>
+      <h2 id="draw" class="text-xl font-bold">{{t .Lang "Send the links"}}</h2>
+      <p class="mt-1 text-sm text-base-content/75">{{t .Lang "Send everyone their link from the list above. Only they can see who they're buying for."}}</p>
+    </div>
+  </div>
+</section>
+{{else}}
+<section class="door p-5 sm:p-6" aria-labelledby="draw">
+  <div class="relative flex items-start gap-4">
+    <span class="door-num size-14 text-2xl">{{icon "shuffle"}}</span>
+    <div class="flex-1">
+      {{if eq .Draw "partial"}}
+      <h2 id="draw" class="text-xl font-bold">{{t .Lang "New people need a pair"}}</h2>
+      <p class="mt-1 text-sm text-white/85">{{t .Lang "Drawing again gives everyone a new person, so let anyone who already looked know."}}</p>
+      {{else if eq .Draw "ready"}}
+      <h2 id="draw" class="text-xl font-bold">{{t .Lang "Ready to draw?"}}</h2>
+      <p class="mt-1 text-sm text-white/85">{{t .Lang "Everyone gets one person to buy for. Nobody draws themselves."}}</p>
+      {{else}}
+      <h2 id="draw" class="text-xl font-bold">{{t .Lang "Draw pairs"}}</h2>
+      <p class="mt-1 text-sm text-white/85">{{t .Lang "Add at least two people to draw."}}</p>
+      {{end}}
+    </div>
+  </div>
+  <form method="post" action="/p/{{.Party.PublicID}}/shuffle" hx-swap="innerHTML show:none" class="relative mt-5"
+        {{if eq .Draw "partial"}}hx-confirm="{{t .Lang "Draw again? Everyone will get a new person."}}"{{end}}>
+    <button type="submit" class="btn btn-accent btn-lg w-full disabled:bg-white/15 disabled:text-white/60"{{if eq .Draw "too-few"}} disabled{{end}}>
+      {{icon "shuffle"}}{{if eq .Draw "partial"}}{{t .Lang "Draw again"}}{{else}}{{t .Lang "Draw now"}}{{end}}
+    </button>
+  </form>
+</section>
+{{end}}
+{{end}}

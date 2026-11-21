@@ -1,0 +1,15 @@
+{{define "hero"}}
+<div class="pt-4">
+  <h1 class="text-3xl leading-tight font-extrabold">{{t .Lang "This door doesn't open"}}</h1>
+</div>
+{{end}}
+
+{{define "content"}}
+<section class="door p-6">
+  <div class="relative flex items-center gap-4">
+    <span class="door-num size-18 shrink-0 text-4xl" aria-hidden="true">?</span>
+    <p class="text-white/90">{{t .Lang "We couldn't find this party or person. Check that you copied the whole link."}}</p>
+  </div>
+  <a href="/" class="btn btn-accent relative mt-5 w-full">{{t .Lang "Go to the start page"}} {{icon "arrow-right"}}</a>
+</section>
+{{end}}

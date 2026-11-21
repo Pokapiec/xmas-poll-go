@@ -1,0 +1,9 @@
+.git
+/bin/
+/xmas-poll
+/web/assets/vendor/
+/db/
+*.db
+*.db-*
+/.impeccable/
+fly.toml

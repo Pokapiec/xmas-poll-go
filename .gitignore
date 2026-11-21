@@ -1,0 +1,13 @@
+# Build tools and binaries
+/bin/
+/xmas-poll
+/web/assets/vendor/
+
+# SQLite databases (db/ is the local default and the Fly volume mount point)
+/db/*
+!/db/.gitkeep
+*.db
+*.db-*
+
+# Design review captures
+/.impeccable/review/
