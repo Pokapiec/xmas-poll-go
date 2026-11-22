@@ -28,6 +28,15 @@ type Party struct {
 	ID       int64
 	PublicID string
 	Name     string
+	PartyDetails
+}
+
+// PartyDetails is what the organizer tells everyone about the party. Every
+// field is optional and empty when not set.
+type PartyDetails struct {
+	Budget       string // free text, such as "100 zł"
+	ExchangeDate string // YYYY-MM-DD
+	Note         string // a message from the organizer
 }
 
 type Person struct {
@@ -36,7 +45,10 @@ type Person struct {
 	PublicID   string
 	Name       string
 	ReceiverID sql.Null[int64]
-	GiftCount  int // only filled in by Store.People
+	// DrawSeen is true once the person has opened their door and seen who
+	// they buy for. A new draw resets it.
+	DrawSeen  bool
+	GiftCount int // only filled in by Store.People
 }
 
 type Gift struct {
@@ -65,7 +77,46 @@ func Open(path string) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}
+	if err := migrate(db); err != nil {
+		db.Close()
+		return nil, err
+	}
 	return &Store{db: db}, nil
+}
+
+// migrations change the schema from schema.sql onwards. They run in order, once
+// each: the database's user_version counts how many have been applied. Only
+// append to this list; never edit an entry that has shipped.
+var migrations = []string{
+	`ALTER TABLE parties ADD COLUMN budget TEXT NOT NULL DEFAULT '';
+	 ALTER TABLE parties ADD COLUMN exchange_date TEXT NOT NULL DEFAULT '';
+	 ALTER TABLE parties ADD COLUMN note TEXT NOT NULL DEFAULT '';
+	 ALTER TABLE people ADD COLUMN draw_seen_at TEXT;`,
+}
+
+func migrate(db *sql.DB) error {
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var version int
+	if err := tx.QueryRow(`PRAGMA user_version`).Scan(&version); err != nil {
+		return err
+	}
+	for i := version; i < len(migrations); i++ {
+		if _, err := tx.Exec(migrations[i]); err != nil {
+			return fmt.Errorf("migration %d: %w", i+1, err)
+		}
+	}
+	if version < len(migrations) {
+		// PRAGMA takes no bound parameters; the value is our own integer.
+		if _, err := tx.Exec(fmt.Sprintf(`PRAGMA user_version = %d`, len(migrations))); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 func (s *Store) Close() error { return s.db.Close() }
@@ -110,20 +161,22 @@ func (s *Store) CreateParty(ctx context.Context, name string) (Party, error) {
 	return p, err
 }
 
-func (s *Store) PartyByPublicID(ctx context.Context, publicID string) (Party, error) {
+const partyColumns = `id, public_id, name, budget, exchange_date, note`
+
+func scanParty(row *sql.Row) (Party, error) {
 	var p Party
-	err := s.db.QueryRowContext(ctx,
-		`SELECT id, public_id, name FROM parties WHERE public_id = ?`, publicID,
-	).Scan(&p.ID, &p.PublicID, &p.Name)
+	err := row.Scan(&p.ID, &p.PublicID, &p.Name, &p.Budget, &p.ExchangeDate, &p.Note)
 	return p, notFound(err)
 }
 
+func (s *Store) PartyByPublicID(ctx context.Context, publicID string) (Party, error) {
+	return scanParty(s.db.QueryRowContext(ctx,
+		`SELECT `+partyColumns+` FROM parties WHERE public_id = ?`, publicID))
+}
+
 func (s *Store) PartyByID(ctx context.Context, id int64) (Party, error) {
-	var p Party
-	err := s.db.QueryRowContext(ctx,
-		`SELECT id, public_id, name FROM parties WHERE id = ?`, id,
-	).Scan(&p.ID, &p.PublicID, &p.Name)
-	return p, notFound(err)
+	return scanParty(s.db.QueryRowContext(ctx,
+		`SELECT `+partyColumns+` FROM parties WHERE id = ?`, id))
 }
 
 func (s *Store) RenameParty(ctx context.Context, partyID int64, name string) error {
@@ -132,10 +185,17 @@ func (s *Store) RenameParty(ctx context.Context, partyID int64, name string) err
 	return err
 }
 
+func (s *Store) UpdatePartyDetails(ctx context.Context, partyID int64, d PartyDetails) error {
+	_, err := s.db.ExecContext(ctx,
+		`UPDATE parties SET budget = ?, exchange_date = ?, note = ?, updated_at = ? WHERE id = ?`,
+		d.Budget, d.ExchangeDate, d.Note, timestamp(), partyID)
+	return err
+}
+
 // People returns everyone in the party along with how many gifts each has on their wishlist.
 func (s *Store) People(ctx context.Context, partyID int64) ([]Person, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT p.id, p.party_id, p.public_id, p.name, p.receiver_id, COUNT(g.id)
+		SELECT p.id, p.party_id, p.public_id, p.name, p.receiver_id, p.draw_seen_at IS NOT NULL, COUNT(g.id)
 		FROM people p
 		LEFT JOIN gifts g ON g.person_id = p.id
 		WHERE p.party_id = ?
@@ -149,7 +209,7 @@ func (s *Store) People(ctx context.Context, partyID int64) ([]Person, error) {
 	var people []Person
 	for rows.Next() {
 		var p Person
-		if err := rows.Scan(&p.ID, &p.PartyID, &p.PublicID, &p.Name, &p.ReceiverID, &p.GiftCount); err != nil {
+		if err := rows.Scan(&p.ID, &p.PartyID, &p.PublicID, &p.Name, &p.ReceiverID, &p.DrawSeen, &p.GiftCount); err != nil {
 			return nil, err
 		}
 		people = append(people, p)
@@ -167,11 +227,27 @@ func (s *Store) CreatePerson(ctx context.Context, partyID int64, name string) (P
 	return p, err
 }
 
-const personColumns = `id, party_id, public_id, name, receiver_id`
+// RenamePerson renames a person only if they belong to the given party.
+func (s *Store) RenamePerson(ctx context.Context, partyID, personID int64, name string) error {
+	res, err := s.db.ExecContext(ctx,
+		`UPDATE people SET name = ?, updated_at = ? WHERE id = ? AND party_id = ?`,
+		name, timestamp(), personID, partyID)
+	return oneRow(res, err)
+}
+
+// MarkDrawSeen records that the person has seen who they buy for. Only the
+// first time counts.
+func (s *Store) MarkDrawSeen(ctx context.Context, personID int64) error {
+	_, err := s.db.ExecContext(ctx,
+		`UPDATE people SET draw_seen_at = ? WHERE id = ? AND draw_seen_at IS NULL`, timestamp(), personID)
+	return err
+}
+
+const personColumns = `id, party_id, public_id, name, receiver_id, draw_seen_at IS NOT NULL`
 
 func scanPerson(row *sql.Row) (Person, error) {
 	var p Person
-	err := row.Scan(&p.ID, &p.PartyID, &p.PublicID, &p.Name, &p.ReceiverID)
+	err := row.Scan(&p.ID, &p.PartyID, &p.PublicID, &p.Name, &p.ReceiverID, &p.DrawSeen)
 	return p, notFound(err)
 }
 
@@ -242,7 +318,7 @@ func (s *Store) ShufflePeople(ctx context.Context, partyID int64) error {
 	ts := timestamp()
 	for i, giver := range ids {
 		if _, err := tx.ExecContext(ctx,
-			`UPDATE people SET receiver_id = ?, updated_at = ? WHERE id = ?`, receivers[i], ts, giver); err != nil {
+			`UPDATE people SET receiver_id = ?, draw_seen_at = NULL, updated_at = ? WHERE id = ?`, receivers[i], ts, giver); err != nil {
 			return err
 		}
 	}
@@ -276,9 +352,23 @@ func (s *Store) CreateGift(ctx context.Context, personID int64, name string) err
 	return err
 }
 
+// UpdateGift changes a gift's text only if it belongs to the given person.
+func (s *Store) UpdateGift(ctx context.Context, personID, giftID int64, name string) error {
+	res, err := s.db.ExecContext(ctx,
+		`UPDATE gifts SET name = ?, updated_at = ? WHERE id = ? AND person_id = ?`,
+		name, timestamp(), giftID, personID)
+	return oneRow(res, err)
+}
+
 // DeleteGift deletes a gift only if it belongs to the given person.
 func (s *Store) DeleteGift(ctx context.Context, personID, giftID int64) error {
 	res, err := s.db.ExecContext(ctx, `DELETE FROM gifts WHERE id = ? AND person_id = ?`, giftID, personID)
+	return oneRow(res, err)
+}
+
+// oneRow turns the result of a write that should touch exactly one row into
+// ErrNotFound when it touched none.
+func oneRow(res sql.Result, err error) error {
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,18 @@
 <div class="pt-4">
   <h1 class="text-3xl leading-tight font-extrabold break-words">{{t .Lang "Hi, %s!" .Person.Name}}</h1>
   <p class="mt-2 text-white/80">{{t .Lang "%s · gift draw" .Party.Name}}</p>
+  {{if or .Party.Budget .Party.ExchangeDate}}
+  <ul class="mt-3 flex flex-wrap gap-2 text-sm">
+    {{with .Party.Budget}}<li class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1"><span class="text-gold">{{icon "wallet"}}</span>{{t $.Lang "Budget"}}: <strong>{{.}}</strong></li>{{end}}
+    {{with .Party.ExchangeDate}}<li class="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1"><span class="text-gold">{{icon "calendar"}}</span><strong>{{date $.Lang .}}</strong></li>{{end}}
+  </ul>
+  {{end}}
+  {{with .Party.Note}}
+  <div class="mt-3 rounded-field bg-white/10 px-3 py-2.5 text-sm text-white/90">
+    <p class="flex items-center gap-1.5 font-semibold text-white"><span class="text-gold">{{icon "message-square-text"}}</span>{{t $.Lang "From the organizer"}}</p>
+    <p class="wish mt-1">{{linkify .}}</p>
+  </div>
+  {{end}}
 </div>
 {{end}}
 
@@ -63,13 +75,30 @@
   {{if .Gifts}}
   <ul class="mt-4 grid gap-2">
     {{range .Gifts}}
-    <li class="flex items-start gap-2 rounded-field bg-base-200 py-1.5 pr-1.5 pl-4">
+    {{if eq $.EditGift .ID}}
+    <li id="gift-{{.ID}}" class="rounded-field bg-base-200 p-2">
+      <form method="post" action="/g/{{$.Person.PublicID}}/{{.ID}}" hx-swap="innerHTML show:none" class="grid gap-2">
+        <label class="sr-only" for="edit-gift">{{$.EditGiftText.Label}}</label>
+        <textarea id="edit-gift" name="{{$.EditGiftText.Name}}" rows="2" maxlength="{{$.EditGiftText.MaxLen}}" required autofocus
+                  class="textarea w-full text-base [field-sizing:content] min-h-20{{if $.EditGiftText.Error}} textarea-error{{end}}"{{if $.EditGiftText.Error}} aria-invalid="true"{{end}}>{{$.EditGiftText.Value}}</textarea>
+        {{template "field-error" $.EditGiftText}}
+        <div class="flex justify-end gap-2">
+          <a href="{{$.Path}}#gift-{{.ID}}" hx-swap="innerHTML show:none" class="btn btn-ghost">{{t $.Lang "Cancel"}}</a>
+          <button type="submit" class="btn btn-primary">{{icon "check"}}{{t $.Lang "Save"}}</button>
+        </div>
+      </form>
+    </li>
+    {{else}}
+    <li id="gift-{{.ID}}" class="flex items-start gap-1 rounded-field bg-base-200 py-1.5 pr-1.5 pl-4">
       <p class="wish flex-1 py-1.5">{{linkify .Name}}</p>
+      <a href="{{$.Path}}?edit={{.ID}}#gift-{{.ID}}" hx-swap="innerHTML show:none"
+         class="btn btn-ghost btn-square text-base-content/70 hover:text-base-content" aria-label="{{t $.Lang "Edit gift"}}">{{icon "pencil"}}</a>
       <form method="post" action="/g/{{$.Person.PublicID}}/{{.ID}}/delete"
             hx-swap="innerHTML show:none" hx-confirm="{{t $.Lang "Delete this gift?"}}">
         <button type="submit" class="btn btn-ghost btn-square text-base-content/70 hover:text-error" aria-label="{{t $.Lang "Delete gift"}}">{{icon "trash-2"}}</button>
       </form>
     </li>
+    {{end}}
     {{end}}
   </ul>
   {{else}}

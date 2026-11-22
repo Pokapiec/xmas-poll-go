@@ -47,13 +47,35 @@
   {{if .People}}
   <ul class="mt-3 divide-y divide-base-300 border-y border-base-300">
     {{range $i, $p := .People}}
-    <li class="flex items-center gap-3 px-5 py-3">
+    {{if eq $.EditPerson $p.ID}}
+    <li id="person-{{$p.ID}}" class="px-5 py-3">
+      <form method="post" action="/p/{{$.Party.PublicID}}/people/{{$p.ID}}/name" hx-swap="innerHTML show:none" class="flex items-center gap-2">
+        <span class="door-num mr-1 size-10 shrink-0 text-lg">{{inc $i}}</span>
+        <label class="sr-only" for="edit-name">{{t $.Lang "Edit name"}}</label>
+        <input id="edit-name" type="text" name="name" value="{{$.EditName.Value}}" maxlength="{{$.EditName.MaxLen}}" required autocomplete="off" autofocus
+               class="input w-full min-w-0 flex-1{{if $.EditName.Error}} input-error{{end}}"{{if $.EditName.Error}} aria-invalid="true"{{end}}>
+        <button type="submit" class="btn btn-primary">{{icon "check"}}<span class="max-sm:sr-only">{{t $.Lang "Save"}}</span></button>
+        <a href="{{$.Path}}#person-{{$p.ID}}" hx-swap="innerHTML show:none" class="btn btn-ghost btn-square" aria-label="{{t $.Lang "Cancel"}}">{{icon "x"}}</a>
+      </form>
+      {{template "field-error" $.EditName}}
+    </li>
+    {{else}}
+    <li id="person-{{$p.ID}}" class="flex items-center gap-3 px-5 py-3">
       <span class="door-num size-10 text-lg">{{inc $i}}</span>
       <div class="min-w-0 flex-1">
-        <p class="truncate font-semibold">{{$p.Name}}</p>
-        <p class="mt-0.5 flex items-center gap-2 text-xs text-base-content/70">
+        <p class="flex items-center gap-1">
+          <span class="truncate font-semibold">{{$p.Name}}</span>
+          <a href="{{$.Path}}?edit={{$p.ID}}#person-{{$p.ID}}" hx-swap="innerHTML show:none"
+             class="btn btn-ghost btn-xs btn-square shrink-0 text-base-content/60 hover:text-base-content" aria-label="{{t $.Lang "Edit name"}}: {{$p.Name}}">{{icon "pencil"}}</a>
+        </p>
+        <p class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-base-content/70">
           <span class="flex gap-1 text-secondary dark:text-info" aria-hidden="true">{{range pips $p.GiftCount}}<span class="pip{{if .}} pip-on{{end}}"></span>{{end}}</span>
           <span class="whitespace-nowrap tabular-nums">{{t $.Lang "%d of %d gifts" $p.GiftCount $.MinGifts}}</span>
+          {{if $p.ReceiverID.Valid}}
+          <span aria-hidden="true">·</span>
+          {{if $p.DrawSeen}}<span class="inline-flex items-center gap-1 whitespace-nowrap font-semibold text-success">{{icon "eye"}}{{t $.Lang "Saw their draw"}}</span>
+          {{else}}<span class="whitespace-nowrap">{{t $.Lang "Hasn't looked yet"}}</span>{{end}}
+          {{end}}
         </p>
       </div>
       {{if $p.ReceiverID.Valid}}
@@ -70,6 +92,7 @@
       <span class="badge badge-soft badge-warning shrink-0">{{t $.Lang "Needs a new draw"}}</span>
       {{end}}
     </li>
+    {{end}}
     {{end}}
   </ul>
   {{else}}
@@ -88,7 +111,69 @@
   </form>
 </section>
 
+{{template "details" .}}
+
 {{if eq .Draw "done" "too-few"}}{{template "draw" .}}{{end}}
+{{end}}
+
+{{define "details"}}
+<section id="details" class="panel p-5" aria-labelledby="details-title">
+  <h2 id="details-title" class="text-xl font-bold">{{t .Lang "Party details"}}</h2>
+  <p class="mt-1 text-sm text-base-content/70">{{t .Lang "Everyone sees these on their own page."}}</p>
+  {{if or .Party.Budget .Party.ExchangeDate .Party.Note}}
+  <dl class="mt-4 grid gap-3">
+    {{with .Party.Budget}}
+    <div class="flex items-start gap-3">
+      <dt class="mt-0.5 text-secondary dark:text-info">{{icon "wallet"}}<span class="sr-only">{{t $.Lang "Budget per gift"}}</span></dt>
+      <dd class="font-semibold">{{.}}</dd>
+    </div>
+    {{end}}
+    {{with .Party.ExchangeDate}}
+    <div class="flex items-start gap-3">
+      <dt class="mt-0.5 text-secondary dark:text-info">{{icon "calendar"}}<span class="sr-only">{{t $.Lang "Gift exchange day"}}</span></dt>
+      <dd class="font-semibold">{{date $.Lang .}}</dd>
+    </div>
+    {{end}}
+    {{with .Party.Note}}
+    <div class="flex items-start gap-3">
+      <dt class="mt-0.5 text-secondary dark:text-info">{{icon "message-square-text"}}<span class="sr-only">{{t $.Lang "Message for everyone"}}</span></dt>
+      <dd class="wish min-w-0">{{linkify .}}</dd>
+    </div>
+    {{end}}
+  </dl>
+  <details class="mt-4"{{if .Details.Open}} open{{end}}>
+    <summary class="btn btn-soft btn-secondary">{{icon "pencil"}}{{t .Lang "Edit details"}}</summary>
+    {{template "details-form" .}}
+  </details>
+  {{else}}
+  {{template "details-form" .}}
+  {{end}}
+</section>
+{{end}}
+
+{{define "details-form"}}
+<form method="post" action="/p/{{.Party.PublicID}}/details" hx-swap="innerHTML show:none" class="mt-4 grid gap-4">
+  <label class="grid gap-1.5">
+    <span class="text-sm font-semibold">{{.Details.Budget.Label}}</span>
+    <input type="text" name="{{.Details.Budget.Name}}" value="{{.Details.Budget.Value}}" placeholder="{{.Details.Budget.Placeholder}}"
+           maxlength="{{.Details.Budget.MaxLen}}" autocomplete="off"
+           class="input w-full{{if .Details.Budget.Error}} input-error{{end}}"{{if .Details.Budget.Error}} aria-invalid="true"{{end}}>
+    {{template "field-error" .Details.Budget}}
+  </label>
+  <label class="grid gap-1.5">
+    <span class="text-sm font-semibold">{{.Details.Date.Label}}</span>
+    <input type="date" name="{{.Details.Date.Name}}" value="{{.Details.Date.Value}}"
+           class="input w-full{{if .Details.Date.Error}} input-error{{end}}"{{if .Details.Date.Error}} aria-invalid="true"{{end}}>
+    {{template "field-error" .Details.Date}}
+  </label>
+  <label class="grid gap-1.5">
+    <span class="text-sm font-semibold">{{.Details.Note.Label}}</span>
+    <textarea name="{{.Details.Note.Name}}" rows="3" maxlength="{{.Details.Note.MaxLen}}" placeholder="{{.Details.Note.Placeholder}}"
+              class="textarea w-full text-base [field-sizing:content] min-h-24{{if .Details.Note.Error}} textarea-error{{end}}"{{if .Details.Note.Error}} aria-invalid="true"{{end}}>{{.Details.Note.Value}}</textarea>
+    {{template "field-error" .Details.Note}}
+  </label>
+  <button type="submit" class="btn btn-primary w-full">{{icon "check"}}{{t .Lang "Save details"}}</button>
+</form>
 {{end}}
 
 {{define "draw"}}

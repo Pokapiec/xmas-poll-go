@@ -109,7 +109,7 @@ func TestFullFlow(t *testing.T) {
 
 	for _, name := range []string{"Bartek", "Celina"} {
 		_, _, body = app.post("/p/"+partyID+"/people", url.Values{"name": {name}})
-		mustContain(t, body, "Added "+name+".", ">"+name+"</p>")
+		mustContain(t, body, "Added "+name+".", ">"+name+"</span>")
 	}
 
 	_, _, body = app.post("/p/"+partyID+"/shuffle", nil)
@@ -177,9 +177,103 @@ func TestFullFlow(t *testing.T) {
 		t.Fatal("door animation played again on reload")
 	}
 
-	// Gift counts show up on the organizer page.
+	// Gift counts, and who has seen their draw, show up on the organizer page.
 	_, _, body = app.get(partyURL)
-	mustContain(t, body, "3 of 3 gifts")
+	mustContain(t, body, "3 of 3 gifts", "Saw their draw", "Hasn&#39;t looked yet")
+}
+
+func TestRenamePerson(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+
+	party, _ := app.store.CreateParty(ctx, "Party")
+	ania, _ := app.store.CreatePerson(ctx, party.ID, "Ania")
+	other, _ := app.store.CreateParty(ctx, "Other")
+	stranger, _ := app.store.CreatePerson(ctx, other.ID, "Stranger")
+	renameURL := func(p store.Person) string { return partyPath(party) + "/people/" + itoa(p.ID) + "/name" }
+
+	// The edit form opens in place of the person's row.
+	_, _, body := app.get(partyPath(party) + "?edit=" + itoa(ania.ID))
+	mustContain(t, body, `action="`+renameURL(ania)+`"`, `value="Ania"`)
+
+	status, _, body := app.post(renameURL(ania), url.Values{"name": {" "}})
+	if status != http.StatusUnprocessableEntity {
+		t.Fatalf("blank name: status %d", status)
+	}
+	mustContain(t, body, "Uzupełnij to pole.", `action="`+renameURL(ania)+`"`)
+
+	_, _, body = app.post(renameURL(ania), url.Values{"name": {"Anna"}})
+	mustContain(t, body, "Zapisano: Anna.", ">Anna</span>")
+
+	// A person from another party can't be renamed through this organizer page.
+	if status, _, _ := app.post(renameURL(stranger), url.Values{"name": {"Hacked"}}); status != http.StatusNotFound {
+		t.Fatalf("other party's person: status %d, want 404", status)
+	}
+	if p, _ := app.store.PersonByID(ctx, stranger.ID); p.Name != "Stranger" {
+		t.Fatalf("other party's person was renamed to %q", p.Name)
+	}
+}
+
+func TestPartyDetails(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+
+	party, _ := app.store.CreateParty(ctx, "Party")
+	ania, _ := app.store.CreatePerson(ctx, party.ID, "Ania")
+	detailsURL := partyPath(party) + "/details"
+
+	status, _, body := app.post(detailsURL, url.Values{"budget": {"100 zł"}, "date": {"24/12/2026"}, "note": {"Hi"}})
+	if status != http.StatusUnprocessableEntity {
+		t.Fatalf("bad date: status %d", status)
+	}
+	mustContain(t, body, "Wybierz datę z kalendarza.", `value="100 zł"`)
+
+	_, _, body = app.post(detailsURL, url.Values{"budget": {"100 zł"}, "date": {"2026-12-24"}, "note": {"See you at 6"}})
+	mustContain(t, body, "Zapisano szczegóły przyjęcia.", "24 grudnia 2026", "See you at 6")
+
+	_, _, body = app.get(giftsPath(ania) + "?locale=en")
+	mustContain(t, body, "Budget: <strong>100 zł</strong>", "24 December 2026", "From the organizer", "See you at 6")
+
+	// Every field can be cleared again.
+	app.post(detailsURL, url.Values{"budget": {""}, "date": {""}, "note": {""}})
+	if p, _ := app.store.PartyByID(ctx, party.ID); p.PartyDetails != (store.PartyDetails{}) {
+		t.Fatalf("details not cleared: %+v", p.PartyDetails)
+	}
+	_, _, body = app.get(giftsPath(ania))
+	if strings.Contains(body, "From the organizer") {
+		t.Fatal("empty note still shown")
+	}
+}
+
+func TestEditGiftOnlyOwn(t *testing.T) {
+	app := newTestApp(t)
+	ctx := context.Background()
+
+	party, _ := app.store.CreateParty(ctx, "Party")
+	ania, _ := app.store.CreatePerson(ctx, party.ID, "Ania")
+	bartek, _ := app.store.CreatePerson(ctx, party.ID, "Bartek")
+	app.store.CreateGift(ctx, bartek.ID, "Socks")
+	gifts, _ := app.store.Gifts(ctx, bartek.ID)
+	giftURL := func(p store.Person) string { return giftsPath(p) + "/" + itoa(gifts[0].ID) }
+
+	_, _, body := app.get(giftsPath(bartek) + "?edit=" + itoa(gifts[0].ID))
+	mustContain(t, body, `action="`+giftURL(bartek)+`"`, ">Socks</textarea>")
+
+	// Ania can't edit Bartek's gift, nor open it for editing on her page.
+	_, _, body = app.get(giftsPath(ania) + "?edit=" + itoa(gifts[0].ID))
+	if strings.Contains(body, "Socks") {
+		t.Fatal("another person's gift shown for editing")
+	}
+	_, _, body = app.post(giftURL(ania), url.Values{"name": {"Coal"}})
+	mustContain(t, body, "Ten prezent został już usunięty.")
+
+	status, _, _ := app.post(giftURL(bartek), url.Values{"name": {""}})
+	if status != http.StatusUnprocessableEntity {
+		t.Fatalf("blank gift: status %d", status)
+	}
+
+	_, _, body = app.post(giftURL(bartek), url.Values{"name": {"Wool socks"}})
+	mustContain(t, body, "Zapisano prezent.", "Wool socks")
 }
 
 func TestValidationErrors(t *testing.T) {

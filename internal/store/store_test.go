@@ -93,3 +93,52 @@ func TestShufflePeopleRefusals(t *testing.T) {
 		t.Fatalf("draw after a new person: %v", err)
 	}
 }
+
+func TestReopenKeepsDataAndSchema(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "test.db")
+	st, err := Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	party, _ := st.CreateParty(ctx, "Party")
+	if err := st.UpdatePartyDetails(ctx, party.ID, PartyDetails{Budget: "50 zł"}); err != nil {
+		t.Fatal(err)
+	}
+	st.Close()
+
+	// Migrations run once: opening again must not try to add the columns twice.
+	st, err = Open(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	if p, _ := st.PartyByID(ctx, party.ID); p.Budget != "50 zł" {
+		t.Fatalf("budget = %q after reopening", p.Budget)
+	}
+}
+
+func TestNewDrawResetsDrawSeen(t *testing.T) {
+	st := openTestStore(t)
+	ctx := context.Background()
+	party, _ := st.CreateParty(ctx, "Party")
+	a, _ := st.CreatePerson(ctx, party.ID, "A")
+	st.CreatePerson(ctx, party.ID, "B")
+	if err := st.ShufflePeople(ctx, party.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := st.MarkDrawSeen(ctx, a.ID); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ := st.PersonByID(ctx, a.ID); !p.DrawSeen {
+		t.Fatal("draw not marked as seen")
+	}
+
+	st.CreatePerson(ctx, party.ID, "C")
+	if err := st.ShufflePeople(ctx, party.ID); err != nil {
+		t.Fatal(err)
+	}
+	if p, _ := st.PersonByID(ctx, a.ID); p.DrawSeen {
+		t.Fatal("draw still marked as seen after a new draw")
+	}
+}

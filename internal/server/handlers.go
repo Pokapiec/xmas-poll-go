@@ -17,8 +17,10 @@ import (
 )
 
 const (
-	maxNameLen = 100
-	maxGiftLen = 1000
+	maxNameLen   = 100
+	maxGiftLen   = 1000
+	maxBudgetLen = 50
+	maxNoteLen   = 1000
 	// A person sees who they are buying for only after adding this many gifts.
 	minGifts = 3
 )
@@ -52,12 +54,15 @@ func (s *server) routes() http.Handler {
 	// Organizer page: /p/{party}.
 	mux.HandleFunc("GET /p/{party}", s.showParty)
 	mux.HandleFunc("POST /p/{party}/name", s.renameParty)
+	mux.HandleFunc("POST /p/{party}/details", s.updateDetails)
 	mux.HandleFunc("POST /p/{party}/people", s.addPerson)
+	mux.HandleFunc("POST /p/{party}/people/{person}/name", s.renamePerson)
 	mux.HandleFunc("POST /p/{party}/shuffle", s.shuffle)
 
 	// A person's own page, shared with them by the organizer: /g/{person}.
 	mux.HandleFunc("GET /g/{person}", s.showGifts)
 	mux.HandleFunc("POST /g/{person}", s.addGift)
+	mux.HandleFunc("POST /g/{person}/{gift}", s.updateGift)
 	mux.HandleFunc("POST /g/{person}/{gift}/delete", s.deleteGift)
 
 	mux.HandleFunc("/", s.notFound)
@@ -100,12 +105,29 @@ const (
 
 type partyPage struct {
 	page
-	Party      store.Party
-	People     []store.Person
-	Draw       string
+	partyForms
+	Party    store.Party
+	People   []store.Person
+	Draw     string
+	MinGifts int
+}
+
+// partyForms holds the organizer page's forms, filled with what was posted
+// when one of them comes back with an error.
+type partyForms struct {
 	PartyName  field
 	PersonName field
-	MinGifts   int
+	Details    detailsForm
+	// EditPerson is the ID of the person whose name is being edited, or 0.
+	EditPerson int64
+	EditName   field
+}
+
+type detailsForm struct {
+	Budget field
+	Date   field
+	Note   field
+	Open   bool // keep the form open: it came back with errors
 }
 
 type giftsPage struct {
@@ -121,6 +143,9 @@ type giftsPage struct {
 	JustOpened    bool // the door opens with an animation right after the last required gift
 	Autofocus     bool
 	NewGift       field
+	// EditGift is the ID of the gift being edited, or 0.
+	EditGift     int64
+	EditGiftText field
 }
 
 // Home and party creation
@@ -164,7 +189,17 @@ func (s *server) showParty(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	s.renderParty(w, r, http.StatusOK, lang, party, partyNameField(lang, party.Name, ""), personNameField(lang, "", ""))
+	forms := defaultPartyForms(lang, party)
+	forms.EditPerson = queryID(r, "edit") // renderParty fills in the name
+	s.renderParty(w, r, http.StatusOK, lang, party, forms)
+}
+
+func defaultPartyForms(lang string, party store.Party) partyForms {
+	return partyForms{
+		PartyName:  partyNameField(lang, party.Name, ""),
+		PersonName: personNameField(lang, "", ""),
+		Details:    newDetailsForm(lang, party.PartyDetails, map[string]string{}),
+	}
 }
 
 func (s *server) renameParty(w http.ResponseWriter, r *http.Request) {
@@ -180,7 +215,9 @@ func (s *server) renameParty(w http.ResponseWriter, r *http.Request) {
 	}
 	name, problem := validateText(value, maxNameLen)
 	if problem != "" {
-		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, partyNameField(lang, name, problem), personNameField(lang, "", ""))
+		forms := defaultPartyForms(lang, party)
+		forms.PartyName = partyNameField(lang, name, problem)
+		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, forms)
 		return
 	}
 	if err := s.store.RenameParty(r.Context(), party.ID, name); err != nil {
@@ -203,7 +240,9 @@ func (s *server) addPerson(w http.ResponseWriter, r *http.Request) {
 	}
 	name, problem := validateText(value, maxNameLen)
 	if problem != "" {
-		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, partyNameField(lang, party.Name, ""), personNameField(lang, name, problem))
+		forms := defaultPartyForms(lang, party)
+		forms.PersonName = personNameField(lang, name, problem)
+		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, forms)
 		return
 	}
 	if _, err := s.store.CreatePerson(r.Context(), party.ID, name); err != nil {
@@ -211,6 +250,93 @@ func (s *server) addPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.redirectWithFlash(w, r, partyPath(party), "info", translate(lang, "Added %s.", name))
+}
+
+func (s *server) renamePerson(w http.ResponseWriter, r *http.Request) {
+	lang := locale(w, r)
+	party, ok := s.party(w, r, lang)
+	if !ok {
+		return
+	}
+	personID, err := strconv.ParseInt(r.PathValue("person"), 10, 64)
+	if err != nil {
+		s.notFound(w, r)
+		return
+	}
+
+	value, ok := formValue(w, r, "name")
+	if !ok {
+		return
+	}
+	name, problem := validateText(value, maxNameLen)
+	if problem != "" {
+		forms := defaultPartyForms(lang, party)
+		forms.EditPerson = personID
+		forms.EditName = personNameField(lang, name, problem)
+		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, forms)
+		return
+	}
+	// The store only renames people in this party.
+	err = s.store.RenamePerson(r.Context(), party.ID, personID, name)
+	if errors.Is(err, store.ErrNotFound) {
+		s.notFound(w, r)
+		return
+	}
+	if err != nil {
+		s.serverError(w, r, err)
+		return
+	}
+	s.redirectWithFlash(w, r, partyPath(party), "info", translate(lang, "Saved: %s.", name))
+}
+
+func (s *server) updateDetails(w http.ResponseWriter, r *http.Request) {
+	lang := locale(w, r)
+	party, ok := s.party(w, r, lang)
+	if !ok {
+		return
+	}
+	if _, ok := formValue(w, r, "budget"); !ok {
+		return
+	}
+
+	details, problems := validateDetails(r.PostForm.Get("budget"), r.PostForm.Get("date"), r.PostForm.Get("note"))
+	if len(problems) > 0 {
+		forms := defaultPartyForms(lang, party)
+		forms.Details = newDetailsForm(lang, details, problems)
+		s.renderParty(w, r, http.StatusUnprocessableEntity, lang, party, forms)
+		return
+	}
+	if err := s.store.UpdatePartyDetails(r.Context(), party.ID, details); err != nil {
+		s.serverError(w, r, err)
+		return
+	}
+	s.redirectWithFlash(w, r, partyPath(party), "info", translate(lang, "Party details saved."))
+}
+
+// validateDetails trims the party details and checks them. Every field may be
+// left empty. Problems are keyed by field name.
+func validateDetails(budget, date, note string) (store.PartyDetails, map[string]string) {
+	problems := map[string]string{}
+	d := store.PartyDetails{
+		Budget:       strings.TrimSpace(budget),
+		ExchangeDate: strings.TrimSpace(date),
+		Note:         strings.TrimSpace(note),
+	}
+	if utf8.RuneCountInString(d.Budget) > maxBudgetLen {
+		d.Budget = string([]rune(d.Budget)[:maxBudgetLen])
+		problems["budget"] = "This is too long."
+	}
+	if utf8.RuneCountInString(d.Note) > maxNoteLen {
+		d.Note = string([]rune(d.Note)[:maxNoteLen])
+		problems["note"] = "This is too long."
+	}
+	if d.ExchangeDate != "" {
+		if _, err := time.Parse(time.DateOnly, d.ExchangeDate); err != nil {
+			d.ExchangeDate = ""
+			problems["date"] = "Pick a date from the calendar."
+		}
+	}
+	return d, problems
 }
 
 func (s *server) shuffle(w http.ResponseWriter, r *http.Request) {
@@ -236,19 +362,25 @@ func (s *server) shuffle(w http.ResponseWriter, r *http.Request) {
 	s.redirectWithFlash(w, r, partyPath(party), "info", translate(lang, "Pairs drawn!"))
 }
 
-func (s *server) renderParty(w http.ResponseWriter, r *http.Request, status int, lang string, party store.Party, partyName, personName field) {
+func (s *server) renderParty(w http.ResponseWriter, r *http.Request, status int, lang string, party store.Party, forms partyForms) {
 	people, err := s.store.People(r.Context(), party.ID)
 	if err != nil {
 		s.serverError(w, r, err)
 		return
 	}
+	if forms.EditPerson != 0 && forms.EditName.Name == "" {
+		for _, p := range people {
+			if p.ID == forms.EditPerson {
+				forms.EditName = personNameField(lang, p.Name, "")
+			}
+		}
+	}
 	s.render(w, status, "party", partyPage{
 		page:       s.page(w, r, lang, translate(lang, "Organizer"), partyPath(party)),
+		partyForms: forms,
 		Party:      party,
 		People:     people,
 		Draw:       drawState(people),
-		PartyName:  partyName,
-		PersonName: personName,
 		MinGifts:   minGifts,
 	})
 }
@@ -281,7 +413,18 @@ func (s *server) showGifts(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	s.renderGifts(w, r, http.StatusOK, lang, party, person, giftField(lang, "", ""))
+	s.renderGifts(w, r, http.StatusOK, lang, party, person, giftForms{
+		New:    giftField(lang, "", ""),
+		EditID: queryID(r, "edit"),
+	})
+}
+
+// giftForms holds the person page's forms: a new gift, and the gift being
+// edited, if any.
+type giftForms struct {
+	New    field
+	EditID int64
+	Edit   field // empty until filled in from the gift, unless it came back with an error
 }
 
 func (s *server) addGift(w http.ResponseWriter, r *http.Request) {
@@ -297,7 +440,7 @@ func (s *server) addGift(w http.ResponseWriter, r *http.Request) {
 	}
 	name, problem := validateText(value, maxGiftLen)
 	if problem != "" {
-		s.renderGifts(w, r, http.StatusUnprocessableEntity, lang, party, person, giftField(lang, name, problem))
+		s.renderGifts(w, r, http.StatusUnprocessableEntity, lang, party, person, giftForms{New: giftField(lang, name, problem)})
 		return
 	}
 	if err := s.store.CreateGift(r.Context(), person.ID, name); err != nil {
@@ -314,6 +457,44 @@ func (s *server) addGift(w http.ResponseWriter, r *http.Request) {
 		setShortCookie(w, revealCookie, "1")
 	}
 	s.redirectWithFlash(w, r, giftsPath(person), "info", translate(lang, "Gift added."))
+}
+
+func (s *server) updateGift(w http.ResponseWriter, r *http.Request) {
+	lang := locale(w, r)
+	party, person, ok := s.partyAndPerson(w, r, lang)
+	if !ok {
+		return
+	}
+	giftID, err := strconv.ParseInt(r.PathValue("gift"), 10, 64)
+	if err != nil {
+		s.notFound(w, r)
+		return
+	}
+
+	value, ok := formValue(w, r, "name")
+	if !ok {
+		return
+	}
+	name, problem := validateText(value, maxGiftLen)
+	if problem != "" {
+		s.renderGifts(w, r, http.StatusUnprocessableEntity, lang, party, person, giftForms{
+			New:    giftField(lang, "", ""),
+			EditID: giftID,
+			Edit:   editGiftField(lang, name, problem),
+		})
+		return
+	}
+	// The store only changes the gift if it belongs to this person.
+	err = s.store.UpdateGift(r.Context(), person.ID, giftID, name)
+	if errors.Is(err, store.ErrNotFound) {
+		s.redirectWithFlash(w, r, giftsPath(person), "error", translate(lang, "This gift was already deleted."))
+		return
+	}
+	if err != nil {
+		s.serverError(w, r, err)
+		return
+	}
+	s.redirectWithFlash(w, r, giftsPath(person), "info", translate(lang, "Gift saved."))
 }
 
 func (s *server) deleteGift(w http.ResponseWriter, r *http.Request) {
@@ -341,7 +522,7 @@ func (s *server) deleteGift(w http.ResponseWriter, r *http.Request) {
 	s.redirectWithFlash(w, r, giftsPath(person), "info", translate(lang, "Gift deleted."))
 }
 
-func (s *server) renderGifts(w http.ResponseWriter, r *http.Request, status int, lang string, party store.Party, person store.Person, newGift field) {
+func (s *server) renderGifts(w http.ResponseWriter, r *http.Request, status int, lang string, party store.Party, person store.Person, forms giftForms) {
 	ctx := r.Context()
 	gifts, err := s.store.Gifts(ctx, person.ID)
 	if err != nil {
@@ -364,9 +545,18 @@ func (s *server) renderGifts(w http.ResponseWriter, r *http.Request, status int,
 		Gifts:     gifts,
 		MinGifts:  minGifts,
 		GiftsLeft: max(0, minGifts-len(gifts)),
-		NewGift:   newGift,
+		NewGift:   forms.New,
 		// Keep the keyboard up while the person is still filling the required gifts.
 		Autofocus: pg.Flash != nil && len(gifts) < minGifts,
+	}
+	for _, g := range gifts {
+		if g.ID == forms.EditID {
+			data.EditGift = g.ID
+			data.EditGiftText = forms.Edit
+			if data.EditGiftText.Name == "" {
+				data.EditGiftText = editGiftField(lang, g.Name, "")
+			}
+		}
 	}
 
 	if data.GiftsLeft == 0 && person.ReceiverID.Valid {
@@ -381,6 +571,12 @@ func (s *server) renderGifts(w http.ResponseWriter, r *http.Request, status int,
 			return
 		}
 		data.JustOpened = popShortCookie(w, r, revealCookie) != ""
+		if !person.DrawSeen {
+			if err := s.store.MarkDrawSeen(ctx, person.ID); err != nil {
+				s.serverError(w, r, err)
+				return
+			}
+		}
 	}
 	s.render(w, status, "gifts", data)
 }
@@ -491,6 +687,53 @@ func giftField(lang, value, problem string) field {
 		Error:       translate(lang, problem),
 		MaxLen:      maxGiftLen,
 	}
+}
+
+func editGiftField(lang, value, problem string) field {
+	return field{
+		Name:   "name",
+		Label:  translate(lang, "Edit gift"),
+		Value:  value,
+		Error:  translate(lang, problem),
+		MaxLen: maxGiftLen,
+	}
+}
+
+func newDetailsForm(lang string, d store.PartyDetails, problems map[string]string) detailsForm {
+	return detailsForm{
+		Budget: field{
+			Name:        "budget",
+			Label:       translate(lang, "Budget per gift"),
+			Placeholder: translate(lang, "e.g. 100 zł"),
+			Value:       d.Budget,
+			Error:       translate(lang, problems["budget"]),
+			MaxLen:      maxBudgetLen,
+		},
+		Date: field{
+			Name:  "date",
+			Label: translate(lang, "Gift exchange day"),
+			Value: d.ExchangeDate,
+			Error: translate(lang, problems["date"]),
+		},
+		Note: field{
+			Name:        "note",
+			Label:       translate(lang, "Message for everyone"),
+			Placeholder: translate(lang, "e.g. We meet at 6 pm. Wrap your gift and write the name on it."),
+			Value:       d.Note,
+			Error:       translate(lang, problems["note"]),
+			MaxLen:      maxNoteLen,
+		},
+		Open: len(problems) > 0,
+	}
+}
+
+// queryID reads a positive integer ID from the query string, or returns 0.
+func queryID(r *http.Request, key string) int64 {
+	id, err := strconv.ParseInt(r.URL.Query().Get(key), 10, 64)
+	if err != nil || id < 0 {
+		return 0
+	}
+	return id
 }
 
 func partyPath(p store.Party) string {

@@ -8,6 +8,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	"xmas-poll/web"
 )
@@ -25,6 +26,7 @@ func parseTemplates() (map[string]*template.Template, error) {
 		"linkify": linkify,
 		"inc":     func(i int) int { return i + 1 },
 		"pips":    pips,
+		"date":    formatDate,
 		"icon": func(name string) (template.HTML, error) {
 			svg, ok := icons[name]
 			if !ok {
@@ -117,4 +119,21 @@ func pips(count int) []bool {
 		marks[i] = i < count
 	}
 	return marks
+}
+
+// Polish month names in the genitive, as used in dates ("24 grudnia").
+var plMonths = [...]string{"stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
+	"lipca", "sierpnia", "września", "października", "listopada", "grudnia"}
+
+// formatDate shows a YYYY-MM-DD date the way people write it, such as
+// "24 grudnia 2026" or "24 December 2026". Anything else comes back unchanged.
+func formatDate(lang, value string) string {
+	d, err := time.Parse(time.DateOnly, value)
+	if err != nil {
+		return value
+	}
+	if lang == "pl" {
+		return fmt.Sprintf("%d %s %d", d.Day(), plMonths[d.Month()-1], d.Year())
+	}
+	return d.Format("2 January 2006")
 }

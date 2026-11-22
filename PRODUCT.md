@@ -26,6 +26,9 @@ A private, link-based tool for one family's Christmas. No accounts, no emails, n
 - The organizer's page URL is effectively their admin key; each person's link is their private key. Links get pasted into WhatsApp, Messenger and the like.
 - A participant only sees their draw after adding at least 3 gifts to their own wishlist (deliberate nudge).
 - Shuffling is disabled once everyone has a receiver; adding a new person allows a reshuffle (which reassigns everyone).
+- The organizer can rename people but not remove them (removing someone would break the drawn pairs).
+- Optional party details (budget per gift, exchange day, a message) show at the top of every person's page.
+- The organizer sees whether each person has looked at their draw. A new draw resets this. Opening a person's link yourself counts as them looking.
 - Used in the weeks before Christmas, opened a handful of times per person.
 
 ## Capabilities and Constraints

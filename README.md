@@ -49,7 +49,9 @@ This downloads the Tailwind standalone CLI and daisyUI into `bin/` and
 | `PORT`          | `4000`                   | HTTP port            |
 | `DATABASE_PATH` | `db/xmas_gift_poll.db`   | SQLite database file |
 
-The schema is created on startup (`internal/store/schema.sql`).
+The schema is created on startup (`internal/store/schema.sql`); later changes
+are numbered migrations in `internal/store/store.go`, tracked by SQLite's
+`user_version`.
 
 ## Deploying to Fly.io
 
@@ -68,7 +70,7 @@ in a distroless container.
 | Path           | Who        |
 | -------------- | ---------- |
 | `/`            | organizer: create a party |
-| `/p/{party}`   | organizer: add people, draw pairs, copy/share links, rename |
-| `/g/{person}`  | person: wishlist, then who they buy for (PL by default, EN switch) |
+| `/p/{party}`   | organizer: add and rename people, draw pairs, copy/share links, rename the party, set party details (budget, date, message), see who has looked at their draw |
+| `/g/{person}`  | person: party details, wishlist (add, edit, delete), then who they buy for (PL by default, EN switch) |
 
 The app generates 16-character random alphanumeric IDs for its private links.
